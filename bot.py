@@ -120,7 +120,7 @@ react_dict = {
 async def log_print(text):
     print('[' + datetime.now().strftime("%x %X") + '] ' + text)
     with open('log.txt', 'a') as log_file:
-        log_file.write(text + "\n")
+        log_file.write('[' + datetime.now().strftime("%x %X") + '] ' + text + "\n")
 
 # Ready
 @client.event
