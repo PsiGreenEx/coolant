@@ -18,6 +18,12 @@ status_movies = [
     "Spaceballs",
     "1992 space movie",
     "family guy",
+    "Dragon Ball",
+    "Dragon Ball Z",
+    "Dragon Ball GT",
+    "Dragon Ball Z Kai",
+    "Dragon Ball Super",
+    "Dragon Ball Super: Broly",
     "a pornography starring your mother.",
     "you sleep!",
     "you always!",
@@ -43,7 +49,9 @@ status_movies = [
     "for the pizza",
     "for omori gifs; death on sight",
     "for mittence; do the funny voice",
-    "the alloy discord server"
+    "the alloy discord server",
+    "odin make Burnout",
+    "vlad make AlloyDungeon"
 ]
 
 # Uses a .env to access it's discord token to prevent token stealing.
@@ -110,14 +118,14 @@ react_dict = {
 
 # Log Print
 async def log_print(text):
-    print(text)
-    #with open('log.txt', 'a') as log_file:
-    #    log_file.write(text + "\n")
+    print('[' + datetime.now().strftime("%x %X") + '] ' + text)
+    with open('log.txt', 'a') as log_file:
+        log_file.write(text + "\n")
 
 # Ready
 @client.event
 async def on_ready():
-    await log_print('[' + datetime.now().strftime("%x %X") + ']' + ' ' + f'{client.user} has connected to Discord!')
+    await log_print(f'{client.user} has connected to Discord!')
     
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(status_movies)))
 
@@ -128,28 +136,37 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    author_name = message.author
+
     # Jarvis
     if msg == 'jarvis,scanthisguysballs' and message.reference is None:
+        await log_print(f"{author_name} used generic scan.")
         await asyncio.sleep(0.5)
         await message.channel.send("Yes sir, commencing ball scan...")
         await asyncio.sleep(2)
         await message.channel.send("Their balls wack, sir.")
     elif (('jarvis,scantheballsof' in msg and len(message.mentions) == 1 and message.reference is None)) or (msg == 'jarvis,scanthisguysballs' and message.reference is not None):
+        await log_print(f"{author_name} used specific scan...")
         await asyncio.sleep(0.5)
         await message.channel.send("Yes sir, commencing ball scan...")
         await asyncio.sleep(2)
 
         if len(message.mentions) == 1:
             mention_id = str(message.mentions[0].id)
+            await log_print(f"{author_name} scanned {message.mentions[0]}")
         elif message.reference is not None:
             mention_id = str(message.reference.resolved.author.id)
+            await log_print(f"{author_name} scanned {message.reference.resolved.author}")
+        else:
+            response = "Scan failed, sir. Please tell Psi about this."
+            await log_print(f"{author_name}'s scan failed!")
         
         if any(mention_id in key for key in scan_messages):
             random_percentage = max(scan_messages[mention_id][1] + random.randint(-15, 15), 0)
-            if mention_id == "244517712032825344" and datetime.now().hour >= 20: random_percentage *= 3
-            response = scan_messages[mention_id][0].replace("`percent`", "`" + str(random_percentage) + "%`")
+            if mention_id == "244517712032825344" and (datetime.now().hour >= 20 or datetime.now().hour <= 6): random_percentage *= 3
+            response = scan_messages[mention_id][0].replace("`percent`", f"`{str(random_percentage)}%`")
         else:
-            response = "Their balls wack, sir. Readings show `" + str(random.randint(0, 100)) + "%` wack."
+            response = f"Their balls wack, sir. Readings show `{str(random.randint(0, 100))}%` wack."
         await message.channel.send(response)
     elif msg == 'https://tenor.com/view/jarvis-gif-21248397':
         await asyncio.sleep(1)
@@ -160,14 +177,17 @@ async def on_message(message):
         for key in phrase_dict:
             if key in message.content.lower():
                 await message.reply(phrase_dict[key])
+                await log_print(f"Auto replied to {key} with {phrase_dict[key]}")
                 break
 
     # Reactions
     for key in react_dict:
         if key in message.content.lower():
             await message.add_reaction(client.get_emoji(react_dict[key]))
+            await log_print(f"Auto reacted to {key} with emoji {react_dict[key]}.")
 
     if message.author.id == admin and "i need a good laugh" in message.content.lower():
+        await log_print(f"{author_name} needed a good laugh.")
         await message.reply("https://cdn.discordapp.com/attachments/739998700767674459/898750730477928518/video0-27.mp4")
     
     await client.process_commands(message)
