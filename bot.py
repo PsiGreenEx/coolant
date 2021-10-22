@@ -24,7 +24,7 @@ status_movies = [
     "Dragon Ball Z Kai",
     "Dragon Ball Super",
     "Dragon Ball Super: Broly",
-    "a pornography starring your mother.",
+    "a pornography starring your mother",
     "you sleep!",
     "you always!",
     "danny devito make pasta",
@@ -50,8 +50,10 @@ status_movies = [
     "for omori gifs; death on sight",
     "for mittence; do the funny voice",
     "the alloy discord server",
+    "smoothie art stream",
     "odin make Burnout",
-    "vlad make AlloyDungeon"
+    "vlad make AlloyDungeon",
+    "alloy direct"
 ]
 
 # Uses a .env to access it's discord token to prevent token stealing.
@@ -202,9 +204,12 @@ async def say(message):
         await log_print('[' + datetime.now().strftime("%x %X") + ']' + ' Said \"' + text + '\"!')
 
 @client.command(name="cst")
-async def change_status(message):
+async def change_status(message, choice=-1):
     if (message.author.id in ACCESS_list):
-        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(status_movies)))
+        if choice == -1:
+            await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(status_movies)))
+        else:
+            await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=status_movies[choice]))
         await message.message.delete()
         await log_print('[' + datetime.now().strftime("%x %X") + ']' + ' Switched status message!')
 
