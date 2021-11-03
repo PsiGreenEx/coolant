@@ -6,7 +6,7 @@ import time
 import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord.utils import get
 prefix = '.'
 client = commands.Bot(command_prefix=prefix)
@@ -53,7 +53,9 @@ status_movies = [
     "smoothie art stream",
     "odin make Burnout",
     "vlad make AlloyDungeon",
-    "alloy direct"
+    "alloy direct",
+    "alloy direct unofficial pre-show",
+    "psi make AlloyAdventures"
 ]
 
 # Uses a .env to access it's discord token to prevent token stealing.
@@ -71,7 +73,7 @@ scan_messages = {
     "517122589718741022": ["23rd President's balls are `23%` wack, sir.",0], # 23
     "221756292862050314": ["Afanguy's balls are `0%` wack, sir.",0], # Afanguy
     "546400083311067137": ["Seha's balls are enormous, sir. Readings say `percent` wack.",12], # Seha
-    "593223812980670493": ["Bug's balls are seemingly irrelevant to the context, sir.",0], # Buggy
+    "593223812980670493": ["Bug's balls are filled with Monster Energy Drink. `percent` wack, sir.",63], # Buggy
     "436985877806317586": ["Callisuni's balls are from space, referred to as spaceballs. Readings say `percent` wack.",30], # Calli
     "346393655432445954": ["Redditor balls, sir. Readings show `percent` wack.",3], # chickenblitz
     "347198887309869078": ["His balls wack, sir. Readings say `percent` wack.",57], # winna
@@ -84,7 +86,7 @@ scan_messages = {
     "306966483911704586": ["Loli in username, sir.",0], # onigiri
     "454735636956577803": ["Balls slightly wack, sir. Readings show `percent` wack.",17], # Lucas
     "538479146679140362": ["Greek balls, sir. `percent` wack.",67], # Lucent
-    "441052235967889430": ["Funny balls, sir. Very wack.",0], # Mittence
+    "441052235967889430": ["I cannot get a full scan, as the scanning radius is seemingly moon-sized. My estimations are `percent` wack, sir.",17], # Mittence
     "402026123086528518": ["His balls are holy, sir. `77%` wack.",0], # Neo
     "244517712032825344": ["Readings show `percent` wack, sir. The reading spikes past 8PM.",27], # Psi
     "453227223693131777": ["Racist balls, sir. Readings show `percent` wack.",37], # psp
@@ -96,16 +98,23 @@ scan_messages = {
     "328118566299631616": ["Emerald balls, sir. `percent` wack, sir.",26], # yormit
     "328697009068310531": ["Lawyer balls, sir. `percent` wack.",12], # pina"
     "670854196584513559": ["I must warn you that this is the infamous Charles Cavet, known sex trafficker. He uses an alias so he's never been caught. He uses Planet Minecraft and \"minecraft but\" datapacks in his operations regularly. Readings say `percent` wack, sir.",83], # ccavet
-    "721758349313441864": ["No balls detected, sir.",0], # beans
+    "721758349313441864": ["Only detecting balls in spirit. `percent` wack, sir.",28], # beans
     "877303149461930034": ["Readings show close relation to worldbuiling. `percent` wack, sir.",26], # crete greece
     "562800486189760514": ["Some real [[pipis]] balls. `percent` wack, sir.",36], # tanjo
     "792893341217718283": ["Very cool balls. `percent` wack, sir.",8], # omega
-    "381193469034496012": ["Hints of cannabis in his balls. `percent` wack, sir.",79] # stoner sudowoodo
+    "381193469034496012": ["Hints of cannabis in his balls. `percent` wack, sir.",79], # stoner sudowoodo
+    "594323388705538069": ["Balls of all colors, sir.",0], # Lexa
+    "155149108183695360": ["The balls of our robot overlord, sir.",0], # Dyno
+    "159985870458322944": ["Stupid fucking balls, sir.",0], # MEE6
+    "783772765962240022": ["These balls seem to only work half the time, sir",0], # Tempy
+    "534589798267224065": ["https://cdn.discordapp.com/attachments/699684376715460628/905262129530175558/dragon-ball-super-goku-shocked-1240697.png",0], # Rank
+    "235088799074484224": ["These balls have been crushed, sir. There is trace amounts of Youtube TOS left on the remnants.",0] # Rhythm
 }
 
 # Phrase response dictionary
 phrase_dict = {
-    "zamn": "She's 12?"
+    "zamn": "SHE'S 12?",
+    "Minecraft - Snapshot": "holy shit, a snapshot!"
 }
 
 # Phrase reaction dictionary
@@ -115,7 +124,10 @@ react_dict = {
     "watching you": 875142471808602112,
     "bingqining": 888508047100633161,
     "whaaa": 779359149791903784,
-    "artifact": 749095975112671312
+    "artifact": 749095975112671312,
+    "hypothetically": 851547872889405470,
+    "keeradance": 708317460578959360,
+    "coolant sucks": 809916658214895666
 }
 
 # Log Print
@@ -131,9 +143,13 @@ async def on_ready():
     
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(status_movies)))
 
+@tasks.loop(hours=12)
+async def auto_change_status():
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(status_movies)))
+
 @client.event
 async def on_message(message):
-    msg = message.content.lower().replace(' ', '')
+    scrubbed_message = message.content.lower().replace(' ', '')
 
     if message.author == client.user:
         return
@@ -141,13 +157,13 @@ async def on_message(message):
     author_name = message.author
 
     # Jarvis
-    if msg == 'jarvis,scanthisguysballs' and message.reference is None:
+    if scrubbed_message == 'jarvis,scanthisguysballs' and message.reference is None:
         await log_print(f"{author_name} used generic scan.")
         await asyncio.sleep(0.5)
         await message.channel.send("Yes sir, commencing ball scan...")
         await asyncio.sleep(2)
         await message.channel.send("Their balls wack, sir.")
-    elif (('jarvis,scantheballsof' in msg and len(message.mentions) == 1 and message.reference is None)) or (msg == 'jarvis,scanthisguysballs' and message.reference is not None):
+    elif (('jarvis,scantheballsof' in scrubbed_message and len(message.mentions) == 1 and message.reference is None)) or (scrubbed_message == 'jarvis,scanthisguysballs' and message.reference is not None):
         await log_print(f"{author_name} used specific scan...")
         await asyncio.sleep(0.5)
         await message.channel.send("Yes sir, commencing ball scan...")
@@ -170,7 +186,7 @@ async def on_message(message):
         else:
             response = f"Their balls wack, sir. Readings show `{str(random.randint(0, 100))}%` wack."
         await message.channel.send(response)
-    elif msg == 'https://tenor.com/view/jarvis-gif-21248397':
+    elif scrubbed_message == 'https://tenor.com/view/jarvis-gif-21248397':
         await asyncio.sleep(1)
         await message.reply("https://tenor.com/view/jarvis-gif-21248407")
     
