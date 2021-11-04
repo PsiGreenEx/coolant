@@ -15,7 +15,7 @@ client.remove_command("help")
 
 # Uses a .env to access it's discord token to prevent token stealing.
 load_dotenv()
-TOKEN = os.getenv('TEST_TOKEN') #DEBUG
+TOKEN = os.getenv('DISCORD_TOKEN') #DEBUG
 
 PHRASE_CHANCE = 0.01
 INFLATION_CHANCE = 0.02
