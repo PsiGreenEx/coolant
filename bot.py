@@ -15,7 +15,7 @@ client.remove_command("help")
 
 # Uses a .env to access it's discord token to prevent token stealing.
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN') #DEBUG
+TOKEN = os.getenv('TEST_TOKEN') #DEBUG
 
 PHRASE_CHANCE = 0.01
 INFLATION_CHANCE = 0.02
@@ -23,8 +23,13 @@ INFLATION_CHANCE = 0.02
 # help command text
 help_embed = discord.Embed(
     title="Help",
-    description="There's no commands! Go yell at Psi to add more features!",
+    description="Go yell at Psi to add more features!",
     color=0x006AF5
+)
+help_embed.add_field(
+    name="Ball Scans",
+    value="Type \"jarvis, scan the balls of \" then mention the user you wish to scan.\nAlternatively, you can type \"jarvis, scan this guys balls\" when replying to a message.",
+    inline=False
 )
 
 # Put a user ID as any of these variables to target it.
@@ -164,6 +169,10 @@ async def on_message(message):
     scrubbed_message = message.content.lower().replace(' ', '')
 
     if message.author == client.user:
+        return
+    
+    if message.channel.type == discord.ChannelType.private:
+        await message.channel.send("Shut the fuck up you stupid bitch!")
         return
 
     author_name = message.author
