@@ -207,12 +207,7 @@ async def log_print(text):
 async def on_ready():
     await log_print(f'{client.user} has connected to Discord!')
     
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(status_movies)))
-
-# Auto Status Change
-@tasks.loop(hours=12)
-async def auto_change_status():
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(status_movies)))
+    #await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(status_movies)))
 
 @client.event
 async def on_message(message):
@@ -325,6 +320,17 @@ class Admin(commands.Cog):
 class Miscellaneous(commands.Cog):
     def __init__(self, client):
         self.client = client
+        self.auto_change_status.start()
+    
+    # Auto Status Change
+    @tasks.loop(hours=12)
+    async def auto_change_status(self):
+        #await client.get_channel(852326964298514452).send("woa")
+        await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(status_movies)))
+
+    @auto_change_status.before_loop
+    async def before_status_loop(self):
+        await self.client.wait_until_ready()
     
     @commands.command(name='help')
     async def help(self, context, category=""):
