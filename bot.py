@@ -57,6 +57,10 @@ help_embed.add_field(
     value="Type \"jarvis, scan the balls of \" then mention the user you wish to scan.\nAlternatively, you can type \"jarvis, scan this guys balls\" when replying to a message.",
     inline=False
 )
+help_embed.add_field(
+    name="Music",
+    value="`.play <youtube-link>`: Joins the voice channel you are in and plays the song. If a song is already playing, it will add it to the queue.\n`.leave`: Leaves current channel.\n`.queued`: Views queued songs.\n`.pause`: Pauses the current song.\n`.resume`: Resumes the song if paused.\n`.stop`: Stops playing and clears the queue.\n`.skip`: Skips the current song."
+)
 
 # Put a user ID as any of these variables to target it.
 admin = 688115255301242919
@@ -337,7 +341,7 @@ class Music(commands.Cog):
             if voice_client.is_connected():
                 await voice_client.disconnect()
         except AttributeError:
-            await ctx.send("The bot is not connected to a voice channel.")
+            await ctx.send("Coolant is not connected to a voice channel.")
         
     @commands.command(name='play', aliases=['p', 'play_song'], help='To play song')
     async def play(self, ctx, *, url:str):
@@ -351,16 +355,16 @@ class Music(commands.Cog):
                 channel = ctx.message.author.voice.channel
                 await channel.connect()
 
-        
-        voice_client = ctx.message.guild.voice_client
-        if not voice_client.is_playing():
-            song_queue.clear()
-        player = await YTDLSource.from_url(url, loop=client.loop, stream=True)
-        if len(song_queue) == 0:
-            await self.start_playing(ctx, player)
-        else:
-            song_queue.append(player)
-            await ctx.send(f"**Queued at position {len(song_queue)-1}:** {player.title}")
+        async with ctx.typing():
+            voice_client = ctx.message.guild.voice_client
+            if not voice_client.is_playing():
+                song_queue.clear()
+            player = await YTDLSource.from_url(url, loop=client.loop, stream=True)
+            if len(song_queue) == 0:
+                await self.start_playing(ctx, player)
+            else:
+                song_queue.append(player)
+                await ctx.send(f"**Queued at position {len(song_queue)-1}:** {player.title}")
       except Exception as e:
         await ctx.send(f"Error occured: {e}")
       
@@ -382,7 +386,7 @@ class Music(commands.Cog):
             try:
                 await tasker
             except asyncio.CancelledError:
-                print("Task cancelled")
+                await log_print("Task cancelled")
             if(len(song_queue) > 0):
                 song_queue.pop(0)
 
@@ -392,55 +396,62 @@ class Music(commands.Cog):
     @commands.command(name='queued', aliases=['q', 'list'], help='This command displays the queue')
     async def queued(self, ctx):
         global song_queue
+        if len(song_queue) == 0:
+            await ctx.send("No songs remaining in queue! <:watcher:875142471808602112>")
+            return
         a = ""
         i = 0
-        for f in song_queue:
+        for song in song_queue:
             if i > 0:
-                a = a + str(i) +". " + f.title + "\n "
+                a = a + "**" + str(i) +".** " + song.title + "\n "
             i += 1
         await ctx.send("Queued songs: \n " + a)
 
     @commands.command(name='pause', help='This command pauses the song')
     async def pause(self, ctx):
         voice_client = ctx.message.guild.voice_client
-        if voice_client.is_playing():
-            await ctx.send("Paused playing.")
-            await voice_client.pause()
-        else:
-            await ctx.send("The bot is not playing anything at the moment.")
+        try:
+            if voice_client.is_playing():
+                await ctx.send("Paused playing.")
+                await voice_client.pause()
+        except AttributeError:
+            await ctx.send("Coolant is not playing anything at the moment.")
     
     @commands.command(name='resume', help='Resumes the song')
     async def resume(self, ctx):
         voice_client = ctx.message.guild.voice_client
-        if voice_client.is_paused():
-            await ctx.send("Resumed playing.")
-            await voice_client.resume()
-        else:
-            await ctx.send("The bot was not playing anything before this. Use play_song command")
+        try:
+            if voice_client.is_paused():
+                await ctx.send("Resumed playing.")
+                await voice_client.resume()
+        except AttributeError:
+            await ctx.send("Coolant was not playing anything before this. Use `.play` instead.")
     
     @commands.command(name='stop', help='Stops the song')
     async def stop(self, ctx):
         global tasker
         global song_queue
         voice_client = ctx.message.guild.voice_client
-        if voice_client.is_playing():
-            song_queue.clear()
-            voice_client.stop()
-            tasker.cancel()
-            await ctx.send("Stopped playing.")
-        else:
-            await ctx.send("The bot is not playing anything at the moment.")
+        try:
+            if voice_client.is_playing():
+                song_queue.clear()
+                voice_client.stop()
+                tasker.cancel()
+                await ctx.send("Stopped playing.")
+        except AttributeError:
+            await ctx.send("Coolant is not playing anything at the moment.")
 
     @commands.command(name='skip', help='Skip the song')
     async def skip(self, ctx):
         global tasker
         voice_client = ctx.message.guild.voice_client
-        if voice_client.is_playing():
-            voice_client.stop()
-            tasker.cancel()
-            await ctx.send("Skipped song.")
-        else:
-            await ctx.send("The bot is not playing anything at the moment.")
+        try:
+            if voice_client.is_playing():
+                voice_client.stop()
+                tasker.cancel()
+                await ctx.send("Skipped song.")
+        except AttributeError:
+            await ctx.send("Coolant is not playing anything at the moment.")
 
 # Delete message unless in DM
 async def delete_message(message):
