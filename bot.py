@@ -340,28 +340,65 @@ class Music(commands.Cog):
     def __init__(self, client):
         self.client = client
     
+    """
+    TODO
+    Add better search function.
+    """
+
+    # Leave when empty
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        global song_queue
+        global tasker
+        voice_client = member.guild.voice_client
+        if before.channel == voice_client.channel:
+            if len(voice_client.channel.members) == 1:
+                song_queue.clear()
+                voice_client.stop()
+                if tasker: tasker.cancel()
+                await voice_client.disconnect()
+
     @commands.command(name='leave', aliases=['l', 'exit'], help='To make the bot leave the voice channel')
     async def leave(self, ctx):
+        global song_queue
+        global tasker
         voice_client = ctx.message.guild.voice_client
-        try:
-            if voice_client.is_connected():
+        if voice_client != None and voice_client.is_connected():
+            if ctx.message.author.voice != None and ctx.message.author.voice.channel == voice_client.channel:
+                song_queue.clear()
+                voice_client.stop()
+                if tasker: tasker.cancel()
                 await voice_client.disconnect()
-        except AttributeError:
+            else:
+                await ctx.send("You are not in the same channel as coolant.")
+        else:
             await ctx.send("Coolant is not connected to a voice channel.")
-        
+    
+    @commands.command(name='join')
+    async def join(self, ctx):
+        voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+        try:
+            if(voice == None):
+                if not ctx.message.author.voice:
+                    await ctx.send(f"{ctx.message.author.name} is not connected to a voice channel")
+                else:
+                    channel = ctx.message.author.voice.channel
+                    await channel.connect()
+        except Exception as e:
+            await ctx.send(f"Error occured: {e}")
+
     @commands.command(name='play', aliases=['p', 'play_song'], help='To play song')
     async def play(self, ctx, *, url:str):
-      global song_queue
-      voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
-      try:
-        if(voice == None):
-            if not ctx.message.author.voice:
-                await ctx.send(f"{ctx.message.author.name} is not connected to a voice channel")
-            else:
-                channel = ctx.message.author.voice.channel
-                await channel.connect()
+        global song_queue
+        voice = discord.utils.get(client.voice_clients, guild=ctx.guild)
+        try:
+            if(voice == None):
+                if not ctx.message.author.voice:
+                    await ctx.send(f"{ctx.message.author.name} is not connected to a voice channel")
+                else:
+                    channel = ctx.message.author.voice.channel
+                    await channel.connect()
 
-        async with ctx.typing():
             voice_client = ctx.message.guild.voice_client
             if not voice_client.is_playing():
                 song_queue.clear()
@@ -371,8 +408,8 @@ class Music(commands.Cog):
             else:
                 song_queue.append(player)
                 await ctx.send(f"**Queued at position {len(song_queue)-1}:** {player.title}")
-      except Exception as e:
-        await ctx.send(f"Error occured: {e}")
+        except Exception as e:
+            await ctx.send(f"Error occured: {e}")
       
     async def start_playing(self, ctx, player):
         global song_queue
@@ -399,7 +436,7 @@ class Music(commands.Cog):
     async def coro(self, ctx, duration):
         await asyncio.sleep(duration)
 
-    @commands.command(name='queued', aliases=['q', 'list'], help='This command displays the queue')
+    @commands.command(name='queued', aliases=['q', 'queue', 'list'], help='This command displays the queue')
     async def queued(self, ctx):
         global song_queue
         if len(song_queue) == 0:
@@ -416,21 +453,28 @@ class Music(commands.Cog):
     @commands.command(name='pause', help='This command pauses the song')
     async def pause(self, ctx):
         voice_client = ctx.message.guild.voice_client
-        try:
-            if voice_client.is_playing():
+        
+        if voice_client != None and voice_client.is_playing():
+            if ctx.message.author.voice != None and ctx.message.author.voice.channel == voice_client.channel:
                 await ctx.send("Paused playing.")
                 await voice_client.pause()
-        except AttributeError:
+            else:
+                await ctx.send("You are not in the same channel as coolant.")
+        else:
             await ctx.send("Coolant is not playing anything at the moment.")
+        
+        
     
     @commands.command(name='resume', help='Resumes the song')
     async def resume(self, ctx):
         voice_client = ctx.message.guild.voice_client
-        try:
-            if voice_client.is_paused():
+        if voice_client != None and voice_client.is_paused():
+            if ctx.message.author.voice != None and ctx.message.author.voice.channel == voice_client.channel:
                 await ctx.send("Resumed playing.")
                 await voice_client.resume()
-        except AttributeError:
+            else:
+                await ctx.send("You are not in the same channel as coolant.")
+        else:
             await ctx.send("Coolant was not playing anything before this. Use `.play` instead.")
     
     @commands.command(name='stop', help='Stops the song')
@@ -438,25 +482,29 @@ class Music(commands.Cog):
         global tasker
         global song_queue
         voice_client = ctx.message.guild.voice_client
-        try:
-            if voice_client.is_playing():
+        if voice_client != None and voice_client.is_playing():
+            if ctx.message.author.voice != None and ctx.message.author.voice.channel == voice_client.channel:
                 song_queue.clear()
                 voice_client.stop()
                 tasker.cancel()
-                await ctx.send("Stopped playing.")
-        except AttributeError:
+                await ctx.send("The queue is cleared.")
+            else:
+                await ctx.send("You are not in the same channel as coolant.")
+        else:
             await ctx.send("Coolant is not playing anything at the moment.")
 
     @commands.command(name='skip', help='Skip the song')
     async def skip(self, ctx):
         global tasker
         voice_client = ctx.message.guild.voice_client
-        try:
-            if voice_client.is_playing():
+        if voice_client != None and voice_client.is_playing():
+            if ctx.message.author.voice != None and ctx.message.author.voice.channel == voice_client.channel:
                 voice_client.stop()
                 tasker.cancel()
                 await ctx.send("Skipped song.")
-        except AttributeError:
+            else:
+                await ctx.send("You are not in the same channel as coolant.")
+        else:
             await ctx.send("Coolant is not playing anything at the moment.")
 
 # Delete message unless in DM
