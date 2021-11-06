@@ -228,32 +228,34 @@ async def on_message(message):
         await log_print(f"{author_name} used generic scan.")
         await asyncio.sleep(0.5)
         await message.channel.send("Yes sir, commencing ball scan...")
-        await asyncio.sleep(2)
-        await message.channel.send("Their balls wack, sir.")
+        async with message.channel.typing():
+            await asyncio.sleep(2)
+            await message.channel.send("Their balls wack, sir.")
     elif (('jarvis,scantheballsof' in scrubbed_message and len(message.mentions) == 1 and message.reference is None)) or (scrubbed_message == 'jarvis,scanthisguysballs' and message.reference is not None):
         await log_print(f"{author_name} used specific scan...")
         await asyncio.sleep(0.5)
         await message.channel.send("Yes sir, commencing ball scan...")
-        await asyncio.sleep(2)
+        async with message.channel.typing():
+            await asyncio.sleep(2)
 
-        if len(message.mentions) == 1:
-            mention_id = str(message.mentions[0].id)
-            await log_print(f"{author_name} scanned {message.mentions[0]}")
-        elif message.reference is not None:
-            mention_id = str(message.reference.resolved.author.id)
-            await log_print(f"{author_name} scanned {message.reference.resolved.author}")
-        else:
-            response = "Scan failed, sir. Please tell Psi about this."
-            await log_print(f"{author_name}'s scan failed!")
+            if len(message.mentions) == 1:
+                mention_id = str(message.mentions[0].id)
+                await log_print(f"{author_name} scanned {message.mentions[0]}")
+            elif message.reference is not None:
+                mention_id = str(message.reference.resolved.author.id)
+                await log_print(f"{author_name} scanned {message.reference.resolved.author}")
+            else:
+                response = "Scan failed, sir. Please tell Psi about this."
+                await log_print(f"{author_name}'s scan failed!")
         
-        if any(mention_id in key for key in scan_messages):
-            random_percentage = max(scan_messages[mention_id][1] + random.randint(-15, 15), 0)
-            if random.random() <= INFLATION_CHANCE: random_percentage + random.randint(500, 50000)
-            if mention_id == "244517712032825344" and (datetime.now().hour >= 20 or datetime.now().hour <= 6): random_percentage *= 3
-            response = scan_messages[mention_id][0].replace("`percent`", f"`{str(random_percentage)}%`")
-        else:
-            response = f"Their balls wack, sir. Readings show `{str(random.randint(0, 100))}%` wack."
-        await message.channel.send(response)
+            if any(mention_id in key for key in scan_messages):
+                random_percentage = max(scan_messages[mention_id][1] + random.randint(-15, 15), 0)
+                if random.random() <= INFLATION_CHANCE: random_percentage + random.randint(500, 50000)
+                if mention_id == "244517712032825344" and (datetime.now().hour >= 20 or datetime.now().hour <= 6): random_percentage *= 3
+                response = scan_messages[mention_id][0].replace("`percent`", f"`{str(random_percentage)}%`")
+            else:
+                response = f"Their balls wack, sir. Readings show `{str(random.randint(0, 100))}%` wack."
+            await message.channel.send(response)
     elif scrubbed_message == 'https://tenor.com/view/jarvis-gif-21248397':
         await asyncio.sleep(1)
         await message.reply("https://tenor.com/view/jarvis-gif-21248407")
