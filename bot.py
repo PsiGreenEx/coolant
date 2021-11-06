@@ -5,6 +5,7 @@ import random
 import time
 import asyncio
 import youtube_dl
+from youtubesearchpython.__future__ import VideosSearch
 from datetime import datetime
 from dotenv import load_dotenv
 from discord.ext import commands, tasks
@@ -59,7 +60,7 @@ help_embed.add_field(
 )
 help_embed.add_field(
     name="Music",
-    value="`.play <youtube-link>`: Joins the voice channel you are in and plays the song. If a song is already playing, it will add it to the queue.\n`.leave`: Leaves current channel.\n`.queued`: Views queued songs.\n`.pause`: Pauses the current song.\n`.resume`: Resumes the song if paused.\n`.stop`: Stops playing and clears the queue.\n`.skip`: Skips the current song."
+    value="`.join`: Joins the channel you are in.\n`.play or .p <youtube-link>`: Joins the channel you are in and plays the song. If a song is already playing, it will add it to the queue.\n`.search or .sr <search-text>`: Allows you to select the top 5 results from youtube to play.\n`.leave`: Leaves current channel and clear the queue.\n`.queue or .q`: Views the song queue.\n`.pause`: Pauses the current song.\n`.resume`: Resumes the song if paused.\n`.stop`: Stops playing and clears the queue.\n`.skip`: Skips the current song."
 )
 
 # Put a user ID as any of these variables to target it.
@@ -339,11 +340,6 @@ class Miscellaneous(commands.Cog):
 class Music(commands.Cog):
     def __init__(self, client):
         self.client = client
-    
-    """
-    TODO
-    Add better search function.
-    """
 
     # Leave when empty
     @commands.Cog.listener()
@@ -351,6 +347,9 @@ class Music(commands.Cog):
         global song_queue
         global tasker
         voice_client = member.guild.voice_client
+        if voice_client == None:
+            return
+        
         if before.channel == voice_client.channel:
             if len(voice_client.channel.members) == 1:
                 song_queue.clear()
@@ -398,11 +397,12 @@ class Music(commands.Cog):
                 else:
                     channel = ctx.message.author.voice.channel
                     await channel.connect()
-
-            voice_client = ctx.message.guild.voice_client
-            if not voice_client.is_playing():
-                song_queue.clear()
-            player = await YTDLSource.from_url(url, loop=client.loop, stream=True)
+            
+            async with ctx.typing():
+                voice_client = ctx.message.guild.voice_client
+                if not voice_client.is_playing():
+                    song_queue.clear()
+                player = await YTDLSource.from_url(url, loop=client.loop, stream=True)
             if len(song_queue) == 0:
                 await self.start_playing(ctx, player)
             else:
@@ -410,7 +410,42 @@ class Music(commands.Cog):
                 await ctx.send(f"**Queued at position {len(song_queue)-1}:** {player.title}")
         except Exception as e:
             await ctx.send(f"Error occured: {e}")
-      
+    
+    @commands.command(name='search', aliases=['sr'])
+    async def search(self, ctx, *, term:str):
+        videos_search = VideosSearch(term, limit = 5)
+        videos_result = await videos_search.next()
+        a = "**Pick a video:**"
+        i = 0
+        for result in videos_result['result']:
+            i += 1
+            a = a + f"\n**{i}.** {result['title']} - {result['duration']}"
+        pick_message = await ctx.send(a)
+        await pick_message.add_reaction('1️⃣')
+        await pick_message.add_reaction('2️⃣')
+        await pick_message.add_reaction('3️⃣')
+        await pick_message.add_reaction('4️⃣')
+        await pick_message.add_reaction('5️⃣')
+
+        def check(reaction, user):
+            return user == ctx.message.author and str(reaction.emoji) in ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣']
+
+        try:
+            reaction, user = await client.wait_for('reaction_add', timeout=5, check=check)
+            reaction_numbers = {
+                '1️⃣': 1,
+                '2️⃣': 2,
+                '3️⃣': 3,
+                '4️⃣': 4,
+                '5️⃣': 5
+            }
+            chosen_result_url = videos_result['result'][reaction_numbers[reaction.emoji] - 1]['link']
+            await pick_message.delete()
+            await self.play(ctx, url=chosen_result_url)
+        except asyncio.TimeoutError:
+            await pick_message.delete()
+            await ctx.send("Timed out.")
+
     async def start_playing(self, ctx, player):
         global song_queue
         song_queue.append(player)
@@ -448,7 +483,7 @@ class Music(commands.Cog):
             if i > 0:
                 a = a + "**" + str(i) +".** " + song.title + "\n "
             i += 1
-        await ctx.send("Queued songs: \n " + a)
+        await ctx.send(f"**Now Playing:** {song_queue[0].title}\n- - -\n**Queue:** \n {a}")
 
     @commands.command(name='pause', help='This command pauses the song')
     async def pause(self, ctx):
