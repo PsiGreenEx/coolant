@@ -47,22 +47,6 @@ ffmpeg_options = {
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
-# help command text
-help_embed = discord.Embed(
-    title="Help",
-    description="Go yell at Psi to add more features!",
-    color=0x006AF5
-)
-help_embed.add_field(
-    name="Ball Scans",
-    value="Type \"jarvis, scan the balls of \" then mention the user you wish to scan.\nAlternatively, you can type \"jarvis, scan this guys balls\" when replying to a message.",
-    inline=False
-)
-help_embed.add_field(
-    name="Music",
-    value="`.join`: Joins the channel you are in.\n`.play or .p <youtube-link>`: Joins the channel you are in and plays the song. If a song is already playing, it will add it to the queue.\n`.search or .sr <search-text>`: Allows you to select the top 5 results from youtube to play.\n`.leave`: Leaves current channel and clear the queue.\n`.queue or .q`: Views the song queue.\n`.pause`: Pauses the current song.\n`.resume`: Resumes the song if paused.\n`.stop`: Stops playing and clears the queue.\n`.skip`: Skips the current song."
-)
-
 # Put a user ID as any of these variables to target it.
 admin = 688115255301242919
 access_list = [admin, 244517712032825344]
@@ -231,7 +215,7 @@ async def on_message(message):
         async with message.channel.typing():
             await asyncio.sleep(2)
             await message.channel.send("Their balls wack, sir.")
-    elif (('jarvis,scantheballsof' in scrubbed_message and len(message.mentions) == 1 and message.reference is None)) or (scrubbed_message == 'jarvis,scanthisguysballs' and message.reference is not None):
+    elif (('jarvis,scantheballsof' in scrubbed_message and len(message.mentions) == 1 and message.reference is None)) or (scrubbed_message == 'jarvis,scanthisguysballs' and message.reference is not None) or (scrubbed_message == 'jarvis,scanmyballs' and message.reference is None):
         await log_print(f"{author_name} used specific scan...")
         await asyncio.sleep(0.5)
         await message.channel.send("Yes sir, commencing ball scan...")
@@ -244,6 +228,9 @@ async def on_message(message):
             elif message.reference is not None:
                 mention_id = str(message.reference.resolved.author.id)
                 await log_print(f"{author_name} scanned {message.reference.resolved.author}")
+            elif message.reference is None:
+                mention_id = str(message.author.id)
+                await log_print(f"{author_name} scanned themself.")
             else:
                 response = "Scan failed, sir. Please tell Psi about this."
                 await log_print(f"{author_name}'s scan failed!")
@@ -337,7 +324,86 @@ class Miscellaneous(commands.Cog):
     
     @commands.command(name='help')
     async def help(self, context, category=""):
+        help_embed = discord.Embed(
+            title="Help",
+            description="Go yell at Psi to add more features!",
+            color=0x006AF5
+        )
+        if category.lower() in ("ball scans", "ball scan", ""):
+            help_embed.add_field(
+                name="Ball Scans",
+                value="Type \"jarvis, scan the balls of \" then mention the user you wish to scan.\nAlternatively, you can type \"jarvis, scan this guys balls\" when replying to a message.",
+            )
+
+        if category.lower() in ("misc", "other", ""):
+            help_embed.add_field(
+                name="Misc",
+                value="`.fuse <name or user> <name or user> [use nickname?]`: Generates Dragon Ball Fusion name by combining two names together."
+            )
+
+        if category.lower() in ("music", "player", ""):
+            help_embed.add_field(
+                name="Music",
+                value="`.join`: Joins the channel you are in.\n`.play or .p <youtube-link>`: Joins the channel you are in and plays the song. If a song is already playing, it will add it to the queue.\n`.search or .sr <search-text>`: Allows you to select the top 5 results from youtube to play.\n`.leave`: Leaves current channel and clear the queue.\n`.queue or .q`: Views the song queue.\n`.pause`: Pauses the current song.\n`.resume`: Resumes the song if paused.\n`.stop`: Stops playing and clears the queue.\n`.skip`: Skips the current song.",
+                inline=False
+            )
+        
         await context.send(embed=help_embed)
+
+    @commands.command(name='fuse')
+    async def fuse(self, context, name1:str, name2:str, use_nickname="no"):
+        title1 = []
+        title2 = []
+        new_title = ""
+
+        # Pull users if mentioned
+        if name1.startswith('<@!') and name1.endswith('>'):
+            user1 = context.message.mentions[0]
+            if use_nickname in ("yes", "true") and user1.nick is not None:
+                name1 = user1.nick
+            else:
+                name1 = user1.name
+
+        if name2.startswith('<@!') and name2.endswith('>'):
+            user2 = context.message.mentions[1]
+            if use_nickname in ("yes", "true") and user2.nick is not None:
+                name2 = user2.nick
+            else:
+                name2 = user2.name
+        
+        # Strip first text from names with titles (usually nicknames)
+        if "|" in name1:
+            title1 = name1.split("|", 1)[1].split()
+            name1 = name1.split("|", 1)[0].rstrip()
+        elif "," in name1:
+            title1 = name1.split(",", 1)[1].split()
+            name1 = name1.split(",", 1)[0].rstrip()
+        
+        if "|" in name2:
+            title2 = name2.split("|", 1)[1].split()
+            name2 = name2.split("|", 1)[0].rstrip()
+        elif "," in name2:
+            title2 = name2.split(",", 1)[1].split()
+            name2 = name2.split(",", 1)[0].rstrip()
+
+        new_name = name1[:len(name1)//2] + name2[len(name2)//2:]
+
+        # hacky way to prevent strings becomming lists
+        if len(title1) == 2: title1 = [[title1[0]], [title1[1]]]
+        if len(title2) == 2: title2 = [[title2[0]], [title2[1]]]
+
+        if len(title1) > 0 and len(title2) == 0:
+            new_title = " | " + " ".join([*title1])
+        elif len(title1) == 0 and len(title2) > 0:
+            new_title = " | " + " ".join([*title2])
+        elif len(title1) > 0 and len(title2) > 0:
+            new_title = " | " + " ".join([*title1[:len(title1)//2], *title2[len(title2)//2]])
+        else:
+            new_title = ""
+
+        await asyncio.sleep(0.25)
+        await context.reply(new_name + new_title)
+
 
 class Music(commands.Cog):
     def __init__(self, client):
