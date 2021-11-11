@@ -389,8 +389,8 @@ class Miscellaneous(commands.Cog):
         new_name = name1[:len(name1)//2] + name2[len(name2)//2:]
 
         # hacky way to prevent strings becomming lists
-        if len(title1) == 2: title1 = [[title1[0]], [title1[1]]]
-        if len(title2) == 2: title2 = [[title2[0]], [title2[1]]]
+        if len(title1) == 2 and len(title2) > 0: title1 = [[title1[0]], [title1[1]]]
+        if len(title2) == 2 and len(title1) > 0: title2 = [[title2[0]], [title2[1]]]
 
         if len(title1) > 0 and len(title2) == 0:
             new_title = " | " + " ".join(title1)
