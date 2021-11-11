@@ -357,14 +357,14 @@ class Miscellaneous(commands.Cog):
         new_title = ""
 
         # Pull users if mentioned
-        if name1.startswith('<@!') and name1.endswith('>'):
+        if name1.startswith('<@') and name1.endswith('>'):
             user1 = context.message.mentions[0]
             if use_nickname in ("yes", "true") and user1.nick is not None:
                 name1 = user1.nick
             else:
                 name1 = user1.name
 
-        if name2.startswith('<@!') and name2.endswith('>'):
+        if name2.startswith('<@') and name2.endswith('>'):
             user2 = context.message.mentions[1]
             if use_nickname in ("yes", "true") and user2.nick is not None:
                 name2 = user2.nick
