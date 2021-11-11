@@ -352,8 +352,8 @@ class Miscellaneous(commands.Cog):
 
     @commands.command(name='fuse')
     async def fuse(self, context, name1:str, name2:str, use_nickname="no"):
-        title1 = []
-        title2 = []
+        title1 = None
+        title2 = None
         new_title = ""
 
         # Pull users if mentioned
@@ -373,31 +373,28 @@ class Miscellaneous(commands.Cog):
         
         # Strip first text from names with titles (usually nicknames)
         if "|" in name1:
-            title1 = name1.split("|", 1)[1].split()
+            title1 = name1.split("|", 1)[1].lstrip()
             name1 = name1.split("|", 1)[0].rstrip()
         elif "," in name1:
-            title1 = name1.split(",", 1)[1].split()
+            title1 = name1.split(",", 1)[1].lstrip()
             name1 = name1.split(",", 1)[0].rstrip()
         
         if "|" in name2:
-            title2 = name2.split("|", 1)[1].split()
+            title2 = name2.split("|", 1)[1].lstrip()
             name2 = name2.split("|", 1)[0].rstrip()
         elif "," in name2:
-            title2 = name2.split(",", 1)[1].split()
+            title2 = name2.split(",", 1)[1].lstrip()
             name2 = name2.split(",", 1)[0].rstrip()
+        
+        print(f"{title1} and {title2}")
 
         new_name = name1[:len(name1)//2] + name2[len(name2)//2:]
-    
-        if len(title1) > 0 and len(title2) == 0:
-            if len(title1) == 2: title1 = [[title1[0]], [title1[1]]]
-            new_title = " | " + " ".join(title1)
-        elif len(title1) == 0 and len(title2) > 0:
-            if len(title2) == 2: title2 = [[title2[0]], [title2[1]]]
-            new_title = " | " + " ".join(title2)
-        elif len(title1) > 0 and len(title2) > 0:
-            new_title = " | " + " ".join([*title1[:len(title1)//2], *title2[len(title2)//2]])
-        else:
-            new_title = ""
+        if title1 is not None and title2 is None:
+            new_title = " | " + title1
+        elif title2 is not None and title1 is None:
+            new_title = " | " + title2
+        elif title1 is not None and title2 is not None:
+            new_title = " | " + title1[:len(title1)//2] + title2[len(title2)//2:]
 
         await asyncio.sleep(0.25)
         await context.reply(new_name + new_title)
