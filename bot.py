@@ -393,9 +393,9 @@ class Miscellaneous(commands.Cog):
         if len(title2) == 2: title2 = [[title2[0]], [title2[1]]]
 
         if len(title1) > 0 and len(title2) == 0:
-            new_title = " | " + " ".join([*title1])
+            new_title = " | " + " ".join(title1)
         elif len(title1) == 0 and len(title2) > 0:
-            new_title = " | " + " ".join([*title2])
+            new_title = " | " + " ".join(title2)
         elif len(title1) > 0 and len(title2) > 0:
             new_title = " | " + " ".join([*title1[:len(title1)//2], *title2[len(title2)//2]])
         else:
