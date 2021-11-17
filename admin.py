@@ -71,7 +71,7 @@ class Admin(commands.Cog):
             text = context.message.content.replace(".s", "")
             await context.send(text)
             await context.message.delete()
-            await log_print('[' + datetime.now().strftime("%x %X") + ']' + ' Said \"' + text + '\"!')
+            await log_print(f"Said \"{text}\"")
 
     @commands.command(name="cst")
     async def change_status(self, context, choice=-1):
@@ -81,7 +81,7 @@ class Admin(commands.Cog):
             else:
                 await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=status_movies[choice]))
             await context.message.delete()
-            await log_print('[' + datetime.now().strftime("%x %X") + ']' + ' Switched status message!')
+            await log_print("Switched status message!")
 
     @commands.command(name='op')
     async def op(self, context):
@@ -89,7 +89,7 @@ class Admin(commands.Cog):
             mention_id = context.mentions[0].id
             access_list.append(mention_id)
             await context.message.delete()
-            await log_print('[' + datetime.now().strftime("%x %X") + ']' + ' Gave \"' + str(mention_id) + '\" permissions!')
+            await log_print(f"Gave \"{str(mention_id)}\" permissions!")
 
     @commands.command(name='deop')
     async def deop(self, context):
@@ -97,4 +97,4 @@ class Admin(commands.Cog):
             mention_id = context.mentions[0].id
             access_list.remove(mention_id)
             await context.message.delete()
-            await log_print('[' + datetime.now().strftime("%x %X") + ']' + ' Took away \"' + str(mention_id) + '\"\'s permissions!')
+            await log_print(f"Took away \"{str(mention_id)}\"'s permissions!")

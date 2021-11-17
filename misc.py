@@ -67,18 +67,20 @@ class Miscellaneous(commands.Cog):
         title2 = None
         new_title = ""
 
+        await log_print(f"{str(context.author)} used fuse.")
+
         # Pull users if mentioned
         if name1.startswith('<@') and name1.endswith('>'):
             user1 = context.message.mentions[0]
-            if use_nickname in ("yes", "true") and user1.nick is not None:
-                name1 = user1.nick
+            if use_nickname in ("yes", "true"):
+                name1 = user1.display_name
             else:
                 name1 = user1.name
 
         if name2.startswith('<@') and name2.endswith('>'):
             user2 = context.message.mentions[1]
-            if use_nickname in ("yes", "true") and user2.nick is not None:
-                name2 = user2.nick
+            if use_nickname in ("yes", "true"):
+                name2 = user2.display_name
             else:
                 name2 = user2.name
 
@@ -101,11 +103,7 @@ class Miscellaneous(commands.Cog):
         new_name = name1[:len(name1) // 2] + name2[len(name2) // 2:]
 
         # fuse titles unless there is only one
-        if title1 is not None and title2 is None:
-            new_title = " | " + title1
-        elif title2 is not None and title1 is None:
-            new_title = " | " + title2
-        elif title1 is not None and title2 is not None:
+        if title1 is not None and title2 is not None:
             new_title = " | " + title1[:len(title1) // 2] + title2[len(title2) // 2:]
 
         await asyncio.sleep(0.25)
