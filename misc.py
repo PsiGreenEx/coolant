@@ -26,6 +26,7 @@ class Miscellaneous(commands.Cog):
 
     @commands.command(name='help')
     async def help(self, context, category=""):
+        # TODO Separate help fields into other modules.
         help_embed = discord.Embed(
             title="Help",
             description="Go yell at Psi to add more features!",
@@ -71,14 +72,14 @@ class Miscellaneous(commands.Cog):
 
         # Pull users if mentioned
         if name1.startswith('<@') and name1.endswith('>'):
-            user1 = context.message.mentions[0]
+            user1 = await context.guild.fetch_member(name1.strip('<@!>'))
             if use_nickname in ("yes", "true"):
                 name1 = user1.display_name
             else:
                 name1 = user1.name
 
         if name2.startswith('<@') and name2.endswith('>'):
-            user2 = context.message.mentions[1]
+            user2 = await context.guild.fetch_member(name2.strip('<@!>'))
             if use_nickname in ("yes", "true"):
                 name2 = user2.display_name
             else:
