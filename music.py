@@ -4,6 +4,7 @@ from youtubesearchpython.__future__ import VideosSearch
 import discord
 import asyncio
 import youtube_dl
+import time
 from discord.ext import commands
 
 from log_print import log_print
@@ -126,7 +127,7 @@ class Music(commands.Cog):
                 await self.start_playing(ctx, player)
             else:
                 song_queue.append(player)
-                await ctx.send(f"**Queued at position {len(song_queue) - 1}:** {player.title}")
+                await ctx.send(f"**Queued at position {len(song_queue) - 1}:** {player.title} - {self.convert_duration(player.duration)}")
         except Exception as e:
             await ctx.send(f"Error occured: {e}")
 
@@ -150,7 +151,7 @@ class Music(commands.Cog):
             return user == ctx.message.author and str(reaction.emoji) in ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
 
         try:
-            reaction, user = await self.client.wait_for('reaction_add', timeout=5, check=check)
+            reaction, user = await self.client.wait_for('reaction_add', timeout=20, check=check)
             reaction_numbers = {
                 '1️⃣': 1,
                 '2️⃣': 2,
@@ -175,7 +176,7 @@ class Music(commands.Cog):
         while i < len(song_queue):
             try:
                 ctx.voice_client.play(song_queue[0], after=lambda e: print('Player error: %s' % e) if e else None)
-                await ctx.send(f"**Now playing:** {song_queue[0].title}")
+                await ctx.send(f"**Now playing:** {song_queue[0].title} - {self.convert_duration(song_queue[0].duration)}")
             except Exception as e:
                 await ctx.send(f"Something went wrong: {e}")
             # await asyncio.sleep(song_queue[0].duration)
@@ -200,9 +201,9 @@ class Music(commands.Cog):
         i = 0
         for song in song_queue:
             if i > 0:
-                a = a + "**" + str(i) + ".** " + song.title + "\n "
+                a = a + "**" + str(i) + ".** " + song.title + " - " + self.convert_duration(song.duration) + "\n "
             i += 1
-        await ctx.send(f"**Now Playing:** {song_queue[0].title}\n- - -\n**Queue:** \n {a}")
+        await ctx.send(f"**Now Playing:** {song_queue[0].title} - {self.convert_duration(song_queue[0].duration)}\n- - -\n**Queue:** \n {a}")
 
     @commands.command(name='pause', help='This command pauses the song')
     async def pause(self, ctx):
@@ -258,3 +259,10 @@ class Music(commands.Cog):
                 await ctx.send("You are not in the same channel as coolant.")
         else:
             await ctx.send("Coolant is not playing anything at the moment.")
+
+    def convert_duration(self, seconds:int):
+        video_time = time.gmtime(seconds)
+        if seconds >= 3600:
+            return time.strftime("%H:%M:%S", video_time)
+        else:
+            return time.strftime("%M:%S", video_time)
