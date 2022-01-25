@@ -56,7 +56,7 @@ SCAN_MESSAGES = {
     "670854196584513559": ["I must warn you that this is the infamous Charles Cavet, known sex trafficker. He uses an alias so he's never been caught. He uses Planet Minecraft and \"minecraft but\" datapacks in his operations regularly. Readings say {} wack, sir.",83], # ccavet
     "721758349313441864": ["Only detecting balls in spirit. {} wack, sir.",28], # beans
     "877303149461930034": ["Readings show close relation to worldbuiling. {} wack, sir.",26], # crete greece
-    "562800486189760514": ["Some real [[pipis]] balls. {} wack, sir.",36], # tanjo
+    "562800486189760514": ["These balls seem hyperfixated. {} wack, sir.",36], # tanjo
     "792893341217718283": ["Very cool balls. {} wack, sir.",8], # omega
     "381193469034496012": ["Hints of cannabis in his balls. {} wack, sir.",79], # stoner sudowoodo
     "477069775944810496": ["Artist balls. {} wack, sir.",9], # onion
@@ -85,7 +85,7 @@ PHRASE_DICT = {
 # Phrase reaction dictionary
 REACT_DICT = {
     "joker": 856994037424586752,
-    "cat": 827223066241007674,
+    "kitten": 827223066241007674,
     "watching you": 875142471808602112,
     "bingqining": 888508047100633161,
     "whaaa": 779359149791903784,
