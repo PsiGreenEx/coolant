@@ -20,7 +20,7 @@ client.remove_command("help")
 
 # Uses a .env to access its discord token to prevent token stealing.
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = "ODY4NzQ0NDUxMjQ0MzAyMzQ2.YP0HUQ.ZuHMTk06eqUlnocfJfVE4Eu_-_M" # os.getenv('DISCORD_TOKEN')
 
 PHRASE_CHANCE = 0.01
 INFLATION_CHANCE = 0.02
@@ -47,7 +47,7 @@ SCAN_MESSAGES = {
     "244517712032825344": ["Readings show {} wack, sir. The reading spikes past 8PM.",27], # Psi
     "453227223693131777": ["Racist balls, sir. Readings show {} wack.",37], # psp
     "288481819173584898": ["Inconsistent balls, sir. Readings say {} wack.",85], # shroedinger
-    "624738893543243786": ["Worldbuilder balls, sir. `39%` wack.",0], # smoothie
+    "624738893543243786": ["Glass balls, sir. `39%` wack.",0], # smoothie
     "538182631074955294": ["Rubber balls, sir. {} wack.",13], # odin
     "169564270277820417": ["His balls have Thaumcraft taint, sir. Readings say {} wack.",47], # vlad
     "607408346668204032": ["Their ball hair seems to be attributed to someone named 'Gabe', sir. Readings say {} wack.",50], # xenza
@@ -65,6 +65,7 @@ SCAN_MESSAGES = {
     "399652203133927427": ["Who? {} wack, I think...",50], # gonc
     "458872384221347849": ["Yummy. {} wack, sir.",40], # ham sandwich
     "856326057400598590": ["Subscribe to Stardust Fantasy.",0], # stardust fantasy
+    "825677056980680704": ["They seem to be balls of the arcana. {} wack, sir.",18], # moon / seb
 
     # Bots
     "868744451244302346": ["My database contains all possible balls in the universe, making them the most wack balls, sir.", 0],  # coolant
