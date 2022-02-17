@@ -260,6 +260,10 @@ class Music(commands.Cog):
         else:
             await ctx.send("Coolant is not playing anything at the moment.")
 
+    @commands.command(name='loop', help='Toggles song looping')
+    async def loop(self, ctx):
+        await ctx.send(":(")
+
     def convert_duration(self, seconds:int):
         video_time = time.gmtime(seconds)
         if seconds >= 3600:

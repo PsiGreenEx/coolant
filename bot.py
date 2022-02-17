@@ -24,6 +24,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 PHRASE_CHANCE = 0.01
 INFLATION_CHANCE = 0.02
+REPEATS_NEEDED = 2
 
 # Balls message dictionary
 SCAN_MESSAGES = {
@@ -38,10 +39,7 @@ SCAN_MESSAGES = {
     "318151890405687296": ["Furry balls, sir. {} wack, readings show.",103], # dopa
     "242220086713122816": ["His balls are deep, sir. Readings show {} wack.",37], # grey
     "645668447967117332": ["His balls wack, sir. They seem to like men. Readings show {} wack.",24], # kazooby
-    "665882081343307794": ["Apologies sir, his balls are too tiny to scan.",0], # pan
-    "306966483911704586": ["Loli in username, sir.",0], # onigiri
     "454735636956577803": ["Balls slightly wack, sir. Readings show {} wack.",17], # Lucas
-    "538479146679140362": ["Greek balls, sir. {} wack.",67], # Lucent
     "441052235967889430": ["I cannot get a full scan, as the scanning radius is seemingly moon-sized. My estimations are {} wack, sir.",17], # Mittence
     "402026123086528518": ["His balls are holy, sir. `77%` wack.",0], # Neo
     "244517712032825344": ["Readings show {} wack, sir. The reading spikes past 8PM.",27], # Psi
@@ -65,7 +63,7 @@ SCAN_MESSAGES = {
     "399652203133927427": ["Who? {} wack, I think...",50], # gonc
     "458872384221347849": ["Yummy. {} wack, sir.",40], # ham sandwich
     "856326057400598590": ["Subscribe to Stardust Fantasy.",0], # stardust fantasy
-    "825677056980680704": ["They seem to be balls of the arcana. {} wack, sir.",18], # moon / seb
+    "825677056980680704": ["They seem to be balls of the arcana. {} wack, sir.",18], # moon
 
     # Bots
     "868744451244302346": ["My database contains all possible balls in the universe, making them the most wack balls, sir.", 0],  # coolant
@@ -96,6 +94,16 @@ REACT_DICT = {
     "coolant sucks": 809916658214895666
 }
 
+# Jarvis command list
+JARVIS_COMMANDS = (
+    "jarvis,scanthisguysballs",
+    "jarvis,scantheballsof",
+    "jarvis,scanmyballs"
+)
+
+repeat_message = ""
+repeat_message_author = ""
+repeat_message_count = 0
 
 # Ready
 @client.event
@@ -115,6 +123,21 @@ async def on_message(message):
         return
 
     author_name = message.author
+
+    # Message Repetition
+    global repeat_message
+    global repeat_message_author
+    global repeat_message_count
+
+    if scrubbed_message not in JARVIS_COMMANDS and message.content == repeat_message and author_name != repeat_message_author:
+        repeat_message_count = repeat_message_count + 1
+    else:
+        repeat_message_count = 0
+
+    if repeat_message_count == REPEATS_NEEDED: await message.channel.send(repeat_message)
+
+    repeat_message = message.content
+    repeat_message_author = author_name
 
     # Jarvis
     # Generic Scan
