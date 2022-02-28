@@ -114,7 +114,7 @@ async def jarvis_command(message: discord.Message, command: str):
 
             await asyncio.sleep(2)
             await message.channel.send(ball_values[scan_id][1])
-    elif "modsuit" in command:
+    elif "modsuit" in command:  # modsuit command
         await asyncio.sleep(0.5)
         await message.channel.send("Sir, in 2021.")
 
@@ -141,7 +141,6 @@ class Jarvis(commands.Cog):
             if random.random() <= INFLATION_CHANCE:
                 offset = offset * INFLATION_MULTIPLIER
             update_value(key, value + offset)
-            #await log_print(f"{key} values changed by {offset}. top: {top_offset} bottom: {bottom_offset}")
 
     @offset_values.before_loop
     async def before_offset_loop(self):

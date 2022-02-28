@@ -45,20 +45,20 @@ status_movies = [
     "balls rating!",
     "balls rating 2!",
     "for bopa; death on sight",
-    "yormit make shit brownies",
     "seha make great brownies",
     "seha make pizza",
     "for the pizza",
     "for omori gifs; death on sight",
     "for mittence; do the funny voice",
     "the alloy discord server",
-    "smoothie art stream",
     "odin make Burnout",
+    "smoothie art stream",
     "vlad make AlloyDungeon",
     "alloy direct",
     "alloy direct unofficial pre-show",
     "psi make AlloyAdventures",
-    "Ulysses 31"
+    "Ulysses 31",
+    "alloy direct 2022"
 ]
 
 
