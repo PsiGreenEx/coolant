@@ -99,7 +99,7 @@ async def jarvis_command(message: discord.Message, command: str):
         await message.channel.send("Yes sir, commencing ball scan...")
         async with message.channel.typing():
             if message.reference is not None:  # if replying to message
-                scan_id = message.reference.resolved.author
+                scan_id = str(message.reference.resolved.author.id)
             elif len(message.mentions) > 0:  # if mentions person
                 scan_id = str(message.mentions[0].id)
             elif "my" in command:  # if self scan
