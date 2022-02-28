@@ -57,7 +57,8 @@ status_movies = [
     "vlad make AlloyDungeon",
     "alloy direct",
     "alloy direct unofficial pre-show",
-    "psi make AlloyAdventures"
+    "psi make AlloyAdventures",
+    "Ulysses 31"
 ]
 
 

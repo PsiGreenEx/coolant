@@ -18,7 +18,7 @@ class Miscellaneous(commands.Cog):
     @tasks.loop(hours=12)
     async def auto_change_status(self):
         await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(status_movies)))
-        await log_print("Automattically changed status.")
+        await log_print("Automatically changed status.")
 
     @auto_change_status.before_loop
     async def before_status_loop(self):
@@ -43,21 +43,6 @@ class Miscellaneous(commands.Cog):
             help_embed.add_field(
                 name="Misc",
                 value="`.fuse <name or user> <name or user> [use nickname?]`: Generates Dragon Ball Fusion name by combining two names together."
-            )
-
-        if category.lower() in ("music", "player", ""):
-            help_embed.add_field(
-                name="Music",
-                value="`.join`: Joins the channel you are in."
-                      "\n`.play or .p <youtube-link>`: Joins the channel you are in and plays the song. If a song is already playing, it will add it to the queue."
-                      "\n`.search or .sr <search-text>`: Allows you to select the top 5 results from youtube to play."
-                      "\n`.leave`: Leaves current channel and clear the queue."
-                      "\n`.queue or .q`: Views the song queue."
-                      "\n`.pause`: Pauses the current song."
-                      "\n`.resume`: Resumes the song if paused."
-                      "\n`.stop`: Stops playing and clears the queue."
-                      "\n`.skip`: Skips the current song.",
-                inline=False
             )
 
         await context.send(embed=help_embed)
