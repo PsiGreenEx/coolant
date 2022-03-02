@@ -30,5 +30,5 @@ class VoiceChannels(commands.Cog):
                 await member.move_to(new_channel)
         if before.channel in self.channel_list:
             if len(before.channel.members) == 0:
-                await log_print(f"Deleted voice channel \"{channel_name}\".")
+                await log_print(f"Deleted voice channel \"{before.channel.name}\".")
                 await before.channel.delete()
