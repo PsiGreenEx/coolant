@@ -12,6 +12,7 @@ from log_print import log_print
 from admin import Admin
 from misc import Miscellaneous
 from jarvis import Jarvis, jarvis_command
+from voice_channels import VoiceChannels
 
 prefix = '.'
 client = commands.Bot(command_prefix=prefix)
@@ -21,6 +22,7 @@ client.remove_command("help")
 # Uses a .env to access its discord token to prevent token stealing.
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+CREATE_CHANNEL_ID = int(os.getenv('VOICE_CHAT_ID'))
 
 PHRASE_CHANCE = 0.01
 REPEATS_NEEDED = 2
@@ -113,4 +115,5 @@ async def on_message(message):
 client.add_cog(Admin(client))
 client.add_cog(Miscellaneous(client))
 client.add_cog(Jarvis(client))
+client.add_cog(VoiceChannels(client, CREATE_CHANNEL_ID))
 client.run(TOKEN)

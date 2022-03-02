@@ -107,6 +107,7 @@ async def jarvis_command(message: discord.Message, command: str):
             else:  # if no one is scanned
                 await asyncio.sleep(2)
                 await message.channel.send("Their balls wack, sir.")
+                await log_print(f"{message.author.id} used generic ball scan.")
                 return
 
             if not any(scan_id in key for key in ball_values):  # if there is not a value present
@@ -114,6 +115,7 @@ async def jarvis_command(message: discord.Message, command: str):
 
             await asyncio.sleep(2)
             await message.channel.send(ball_values[scan_id][1])
+            await log_print(f"{message.author.id} scanned {scan_id}'s balls.")
     elif "modsuit" in command:  # modsuit command
         await asyncio.sleep(0.5)
         await message.channel.send("Sir, in 2021.")
@@ -139,6 +141,7 @@ class Jarvis(commands.Cog):
                 top_offset = 1
             offset = random.randint(-SILLY_INCREASE_MARGIN * bottom_offset, SILLY_INCREASE_MARGIN * top_offset)
             if random.random() <= INFLATION_CHANCE:
+                print("INFLATED!")
                 offset = offset * INFLATION_MULTIPLIER
             update_value(key, value + offset)
 
