@@ -14,7 +14,7 @@ from jarvis import Jarvis, jarvis_command
 from voice_channels import VoiceChannels
 
 intents = discord.Intents.default()
-intents.members = True
+#intents.members = True
 intents.messages = True
 
 prefix = '.'
