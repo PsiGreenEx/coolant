@@ -42,7 +42,8 @@ SPECIAL_VALUES = {
 with open("messages.json", "r") as message_file:
     SCAN_MESSAGES = json.loads(message_file.read())
 
-ball_values = {}
+with open("ball_values.json", "r") as values_file:
+    ball_values = json.loads(values_file.read())
 
 
 def update_value(user_id, value):
@@ -90,6 +91,8 @@ def update_value(user_id, value):
         if not is_excluded: message = message + SCAN_READING[1].format(shown_value)
 
     ball_values[user_id].append(message)
+    with open('ball_values.json', 'w', encoding='utf-8') as f:
+        json.dump(ball_values, f, ensure_ascii=False, indent=2)
 
 
 async def jarvis_command(message: discord.Message, command: str):

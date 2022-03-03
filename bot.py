@@ -13,8 +13,12 @@ from misc import Miscellaneous
 from jarvis import Jarvis, jarvis_command
 from voice_channels import VoiceChannels
 
+intents = discord.Intents.default()
+intents.members = True
+intents.messages = True
+
 prefix = '.'
-client = commands.Bot(command_prefix=prefix)
+client = commands.Bot(command_prefix=prefix, intents=intents)
 
 client.remove_command("help")
 
