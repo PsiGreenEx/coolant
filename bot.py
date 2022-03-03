@@ -82,7 +82,7 @@ async def on_message(message):
     else:
         repeat_message_count = 0
 
-    if repeat_message_count == REPEATS_NEEDED:
+    if repeat_message_count == REPEATS_NEEDED and repeat_message != "":
         async with message.channel.typing():
             await asyncio.sleep(1)
             await message.channel.send(repeat_message)
