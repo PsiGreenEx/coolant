@@ -119,6 +119,9 @@ async def jarvis_command(message: discord.Message, command: str):
     elif "modsuit" in command:  # modsuit command
         await asyncio.sleep(0.5)
         await message.channel.send("Sir, in 2021.")
+    elif "create new vc" in command:  # create new vc
+        await asyncio.sleep(0.5)
+        await message.channel.send("The \"create new vc\" channel is ready for you, sir.")
 
 
 class Jarvis(commands.Cog):

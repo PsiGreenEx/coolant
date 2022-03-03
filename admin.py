@@ -2,7 +2,6 @@
 
 import discord
 import random
-from datetime import datetime
 from discord.ext import commands
 # local modules
 from log_print import log_print

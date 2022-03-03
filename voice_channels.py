@@ -1,6 +1,5 @@
 # voice_channels.py
 import discord
-import asyncio
 from discord.ext import commands
 # local modules
 from log_print import log_print

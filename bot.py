@@ -4,7 +4,6 @@ import os
 import discord
 import random
 import asyncio
-from datetime import datetime
 from dotenv import load_dotenv
 from discord.ext import commands
 # local modules
