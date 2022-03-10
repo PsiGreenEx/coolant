@@ -54,7 +54,7 @@ def update_value(user_id, value):
     shown_value = value
 
     # determine value category
-    if value < -100:
+    if value <= -100:
         category_value = VALUE_CATEGORY["SUPERWACK"]
     elif -100 < value < 0:
         category_value = VALUE_CATEGORY["WACK"]
