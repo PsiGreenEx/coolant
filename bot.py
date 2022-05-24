@@ -14,7 +14,7 @@ from jarvis import Jarvis, jarvis_command
 from voice_channels import VoiceChannels
 
 intents = discord.Intents.default()
-#intents.members = True
+intents.members = True
 intents.messages = True
 
 prefix = '.'
@@ -26,6 +26,8 @@ client.remove_command("help")
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 CREATE_CHANNEL_ID = int(os.getenv('VOICE_CHAT_ID'))
+JOIN_CHANNEL_ID = int(os.getenv('JOIN_CHANNEL_ID'))
+MEMBER_ROLE_ID = int(os.getenv('MEMBER_ROLE_ID'))
 
 PHRASE_CHANCE = 0.01
 REPEATS_NEEDED = 2
@@ -52,6 +54,7 @@ REACT_DICT = {
 repeat_message = ""
 repeat_message_author = ""
 repeat_message_count = 0
+
 
 # Ready
 @client.event
@@ -114,9 +117,10 @@ async def on_message(message):
     await client.process_commands(message)
 
 
-# Run the client
-client.add_cog(Admin(client))
-client.add_cog(Miscellaneous(client))
-client.add_cog(Jarvis(client))
-client.add_cog(VoiceChannels(client, CREATE_CHANNEL_ID))
-client.run(TOKEN)
+if __name__ == "__main__":
+    # Run the client
+    client.add_cog(Admin(client))
+    client.add_cog(Miscellaneous(client, JOIN_CHANNEL_ID, MEMBER_ROLE_ID))
+    client.add_cog(Jarvis(client))
+    client.add_cog(VoiceChannels(client, CREATE_CHANNEL_ID))
+    client.run(TOKEN)

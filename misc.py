@@ -3,16 +3,36 @@
 import discord
 import random
 import asyncio
+import json
 from discord.ext import commands, tasks
 # local modules
 from log_print import log_print
 from admin import status_movies
 
+with open("join_messages.json", "r") as message_file:
+    JOIN_MESSAGES = json.loads(message_file.read())
+
 
 class Miscellaneous(commands.Cog):
-    def __init__(self, client):
+    def __init__(self, client, join_channel_id: int, member_role_id: int):
         self.client = client
+        self.join_channel_id = join_channel_id
+        self.member_role_id = member_role_id
         self.auto_change_status.start()
+
+    # Join message and role add.
+    @commands.Cog.listener("on_member_join")
+    async def join_greet(self, member: discord.Member):
+        join_channel = self.client.get_channel(self.join_channel_id)
+        member_role = member.guild.get_role(self.member_role_id)
+        await join_channel.send(random.choice(JOIN_MESSAGES["join"]).format(member.mention))
+        await member.add_roles(member_role)
+
+    # Leave message
+    @commands.Cog.listener("on_member_remove")
+    async def leave_message(self, member: discord.Member):
+        join_channel = self.client.get_channel(self.join_channel_id)
+        await join_channel.send(random.choice(JOIN_MESSAGES["leave"]).format(member))
 
     # Auto Status Change
     @tasks.loop(hours=12)
