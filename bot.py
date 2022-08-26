@@ -47,8 +47,7 @@ REACT_DICT = {
     "whaaa": 779359149791903784,
     "artifact": 749095975112671312,
     "hypothetically": 851547872889405470,
-    "keeradance": 708317460578959360,
-    "coolant sucks": 809916658214895666
+    "coolant sucks": 1012800230401515632
 }
 
 repeat_message = ""
@@ -122,5 +121,5 @@ if __name__ == "__main__":
     client.add_cog(Admin(client))
     client.add_cog(Miscellaneous(client, JOIN_CHANNEL_ID, MEMBER_ROLE_ID))
     client.add_cog(Jarvis(client))
-    client.add_cog(VoiceChannels(client, CREATE_CHANNEL_ID))
+    client.add_cog(VoiceChannels(client, CREATE_CHANNEL_ID, MEMBER_ROLE_ID))
     client.run(TOKEN)

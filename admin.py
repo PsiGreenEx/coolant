@@ -50,14 +50,17 @@ status_movies = [
     "for omori gifs; death on sight",
     "for mittence; do the funny voice",
     "the alloy discord server",
-    "odin make Burnout",
+    "odin make Impossibly Red",
     "smoothie art stream",
     "vlad make AlloyDungeon",
     "alloy direct",
     "alloy direct unofficial pre-show",
     "psi make AlloyAdventures",
     "Ulysses 31",
-    "alloy direct 2022"
+    "alloy direct 2022",
+    "alloy direct OFFICIAL pre-show",
+    "for a new music bot",
+    "Dragon Ball Super: Super Hero"
 ]
 
 
