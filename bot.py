@@ -13,9 +13,7 @@ from misc import Miscellaneous
 from jarvis import Jarvis, jarvis_command
 from voice_channels import VoiceChannels
 
-intents = discord.Intents.default()
-intents.members = True
-intents.messages = True
+intents = discord.Intents.all()
 
 prefix = '.'
 client = commands.Bot(command_prefix=prefix, intents=intents)
@@ -98,7 +96,7 @@ async def on_message(message):
     elif message_content == 'https://tenor.com/view/jarvis-gif-21248397':
         await asyncio.sleep(1)
         await message.reply("https://tenor.com/view/jarvis-gif-21248407")
-    
+
     # Responses
     if random.random() <= PHRASE_CHANCE:
         for key in PHRASE_DICT:

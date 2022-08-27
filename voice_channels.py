@@ -21,10 +21,10 @@ class VoiceChannels(commands.Cog):
         author_id = str(context.author.id)
 
         if not any(author_id in key for key in self.vc_preferences):
-            self.vc_preferences[str(author_id)] = self.vc_preferences["default"]
+            self.vc_preferences[author_id] = [self.vc_preferences["default"][0], self.vc_preferences["default"][1]]
 
         if user_limit >= 0:
-            self.vc_preferences[author_id][0] = user_limit
+            self.vc_preferences[author_id][0] = min(user_limit, 99)
 
         if channel_name != "":
             self.vc_preferences[author_id][1] = channel_name
