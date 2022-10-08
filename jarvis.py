@@ -39,10 +39,10 @@ SPECIAL_VALUES = {
     "517122589718741022": (3232, 32, 0, 23, 2323)   # 23prez
 }
 
-with open("messages.json", "r") as message_file:
+with open("data/messages.json", "r") as message_file:
     SCAN_MESSAGES = json.loads(message_file.read())
 
-with open("ball_values.json", "r") as values_file:
+with open("store/ball_values.json", "r") as values_file:
     ball_values = json.loads(values_file.read())
 
 
@@ -91,7 +91,7 @@ def update_value(user_id, value):
         if not is_excluded: message = message + SCAN_READING[1].format(shown_value)
 
     ball_values[user_id].append(message)
-    with open('ball_values.json', 'w', encoding='utf-8') as f:
+    with open('store/ball_values.json', 'w', encoding='utf-8') as f:
         json.dump(ball_values, f, ensure_ascii=False, indent=2)
 
 

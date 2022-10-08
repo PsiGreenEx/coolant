@@ -1,4 +1,5 @@
 # admin.py
+import json
 
 import discord
 import random
@@ -6,62 +7,13 @@ from discord.ext import commands
 # local modules
 from log_print import log_print
 
-# Put a user ID as any of these variables to target it.
-admin = 688115255301242919
-access_list = [admin, 244517712032825344]
+# admin command access
+with open("data/bot_data.json", 'r') as bot_data_file:
+    access_list: list = json.loads(bot_data_file.read())["admin_access_list"]
 
-# Status dictionary
-status_movies = [
-    "Iron Man",
-    "Iron Man 2",
-    "Iron Man 3",
-    "Finding Nemo 11",
-    "Spaceballs",
-    "1992 space movie",
-    "family guy",
-    "Dragon Ball",
-    "Dragon Ball Z",
-    "Dragon Ball GT",
-    "Dragon Ball Z Kai",
-    "Dragon Ball Super",
-    "Dragon Ball Super: Broly",
-    "a pornography starring your mother",
-    "you sleep!",
-    "you always!",
-    "danny devito make pasta",
-    "cock rating 1!",
-    "cock rating 2!",
-    "cock rating 2 reloaded!",
-    "cock rating 3!",
-    "cock rating 4!",
-    "cock rating 5!",
-    "cock rating 6!",
-    "cock rating 7!",
-    "cock rating 8!",
-    "cock rating 9!",
-    "cock rating 10!",
-    "cock rating 99!",
-    "balls rating!",
-    "balls rating 2!",
-    "for bopa; death on sight",
-    "seha make great brownies",
-    "seha make pizza",
-    "for the pizza",
-    "for omori gifs; death on sight",
-    "for mittence; do the funny voice",
-    "the alloy discord server",
-    "odin make Impossibly Red",
-    "smoothie art stream",
-    "vlad make AlloyDungeon",
-    "alloy direct",
-    "alloy direct unofficial pre-show",
-    "psi make AlloyAdventures",
-    "Ulysses 31",
-    "alloy direct 2022",
-    "alloy direct OFFICIAL pre-show",
-    "for a new music bot",
-    "Dragon Ball Super: Super Hero"
-]
+# Status list
+with open("data/status_movies.json", 'r') as status_movies_file:
+    status_movies: list = json.loads(status_movies_file.read())
 
 
 class Admin(commands.Cog):
@@ -88,7 +40,7 @@ class Admin(commands.Cog):
 
     @commands.command(name='op')
     async def op(self, context):
-        if context.author.id == admin:
+        if context.author.id == access_list:
             mention_id = context.mentions[0].id
             access_list.append(mention_id)
             await context.message.delete()
@@ -96,7 +48,7 @@ class Admin(commands.Cog):
 
     @commands.command(name='deop')
     async def deop(self, context):
-        if context.author.id == admin:
+        if context.author.id == access_list:
             mention_id = context.mentions[0].id
             access_list.remove(mention_id)
             await context.message.delete()

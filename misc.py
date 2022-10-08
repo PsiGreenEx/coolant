@@ -9,7 +9,7 @@ from discord.ext import commands, tasks
 from log_print import log_print
 from admin import status_movies
 
-with open("join_messages.json", "r") as message_file:
+with open("data/join_messages.json", "r") as message_file:
     JOIN_MESSAGES = json.loads(message_file.read())
 
 
@@ -66,7 +66,7 @@ class Miscellaneous(commands.Cog):
             help_embed.add_field(
                 name="Misc",
                 value="`.fuse <name or user> <name or user> [use nickname?]`: Generates Dragon Ball Fusion name by combining two names together.\n\n"
-                      "`.quote`: Finds a random message in the server (rarely). Don't spam this one, as it could rate limit the bot."
+                      "`.quote`: Coming soon! (probably)"
             )
 
         if category.lower() in ("voice", "voice channel", "vc", ""):
@@ -128,33 +128,9 @@ class Miscellaneous(commands.Cog):
 
     @commands.command(name="quote")
     async def quote(self, context: discord.ext.commands.Context, *args):
-        if len(args) == 0 or args[0] != "please":
-            await context.send("This command is API heavy, so be wary of sending it many times, or while another one is running.\n"
-                               "To run the command, put 'please' after the command. (Cherries on top completely optional.)")
-            return
+        pass
 
-        channels = context.guild.text_channels
-        channel = random.choice(channels)
-        await log_print(f"Searching {channel.name} for quote...")
-        # try for 100 messages
-        async with context.typing():
-            for i in range(150):
-                # 699689536061440012 is first message id in alloy announcements
-                message_id = random.randint(699689536061440012, context.message.id)
-                print(f"trying {message_id}...")
-                try:
-                    message: discord.Message = await channel.fetch_message(message_id)
-
-                    if message.content == "":
-                        print("blank message found. trying again...")
-                        continue
-
-                    await log_print(f"Found a message after {i+1} tries!")
-                    await context.send(f"Once, in {message.channel.mention}, {message.author.mention} said:\n"
-                                       f"\"{message.content}\"")
-                    return
-                except discord.NotFound:
-                    continue
-
-        # if alllll else fails
-        await context.send("Whelp, I've got nothing.")
+    @commands.slash_command()
+    @commands.guild_only()
+    async def flurgus(self, context: discord.ApplicationContext):
+        await context.respond("No Way.")

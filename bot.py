@@ -1,10 +1,9 @@
 # bot.py
+import json
 
-import os
 import discord
 import random
 import asyncio
-from dotenv import load_dotenv
 from discord.ext import commands
 # local modules
 from log_print import log_print
@@ -12,41 +11,29 @@ from admin import Admin
 from misc import Miscellaneous
 from jarvis import Jarvis, jarvis_command
 from voice_channels import VoiceChannels
+from game import Games
 
 intents = discord.Intents.all()
 
+with open("data/bot_data.json", "r") as bot_data_file:
+    bot_data: dict = json.loads(bot_data_file.read())
+    TOKEN = bot_data["token"]
+    CREATE_CHANNEL_ID = bot_data["voice_chat_id"]
+    JOIN_CHANNEL_ID = bot_data["join_channel_id"]
+    MEMBER_ROLE_ID = bot_data["member_role_id"]
+
 prefix = '.'
-client = commands.Bot(command_prefix=prefix, intents=intents)
+client = commands.Bot(command_prefix=prefix, intents=intents, debug_guilds=[bot_data['alloy_guild_id'], bot_data['bot_test_guild_id']])
 
 client.remove_command("help")
 
-# Uses a .env to access its discord token to prevent token stealing.
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-CREATE_CHANNEL_ID = int(os.getenv('VOICE_CHAT_ID'))
-JOIN_CHANNEL_ID = int(os.getenv('JOIN_CHANNEL_ID'))
-MEMBER_ROLE_ID = int(os.getenv('MEMBER_ROLE_ID'))
-
-PHRASE_CHANCE = 0.01
+PHRASE_CHANCE = 0.02
 REPEATS_NEEDED = 2
 
-# Phrase response dictionary
-PHRASE_DICT = {
-    "zamn": "SHE'S 12?",
-    "minecraft - snapshot": "holy shit, a snapshot!"
-}
-
-# Phrase reaction dictionary
-REACT_DICT = {
-    "joker": 856994037424586752,
-    "kitten": 827223066241007674,
-    "watching you": 875142471808602112,
-    "bingqining": 888508047100633161,
-    "whaaa": 779359149791903784,
-    "artifact": 749095975112671312,
-    "hypothetically": 851547872889405470,
-    "coolant sucks": 1012800230401515632
-}
+with open("data/reactions.json", 'r') as reactions_file:
+    reactions_dict = json.loads(reactions_file.read())
+    PHRASE_DICT = reactions_dict["phrases"]
+    REACT_DICT = reactions_dict["reactions"]
 
 repeat_message = ""
 repeat_message_author = ""
@@ -120,4 +107,5 @@ if __name__ == "__main__":
     client.add_cog(Miscellaneous(client, JOIN_CHANNEL_ID, MEMBER_ROLE_ID))
     client.add_cog(Jarvis(client))
     client.add_cog(VoiceChannels(client, CREATE_CHANNEL_ID, MEMBER_ROLE_ID))
+    client.add_cog(Games(client))
     client.run(TOKEN)

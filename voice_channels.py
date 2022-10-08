@@ -13,7 +13,7 @@ class VoiceChannels(commands.Cog):
         self.member_role_id = member_role_id
         self.channel_list = []
 
-        with open("vc_preferences.json", "r") as preference_file:
+        with open("store/vc_preferences.json", "r") as preference_file:
             self.vc_preferences = json.loads(preference_file.read())
 
     @commands.command(name="vcpref")
@@ -29,7 +29,7 @@ class VoiceChannels(commands.Cog):
         if channel_name != "":
             self.vc_preferences[author_id][1] = channel_name
 
-        with open("vc_preferences.json", "w") as preference_file:
+        with open("store/vc_preferences.json", "w") as preference_file:
             json.dump(self.vc_preferences, preference_file)
 
         await context.send(f"{context.author.mention}\nYour preferences are:\n"
