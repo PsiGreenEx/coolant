@@ -1,11 +1,11 @@
 # admin.py
-import json
 
+import json
 import discord
 import random
 from discord.ext import commands
 # local modules
-from log_print import log_print
+from library import *
 
 # admin command access
 with open("data/bot_data.json", 'r') as bot_data_file:
@@ -40,7 +40,7 @@ class Admin(commands.Cog):
 
     @commands.command(name='op')
     async def op(self, context):
-        if context.author.id == access_list:
+        if context.author.id in access_list:
             mention_id = context.mentions[0].id
             access_list.append(mention_id)
             await context.message.delete()
@@ -48,7 +48,7 @@ class Admin(commands.Cog):
 
     @commands.command(name='deop')
     async def deop(self, context):
-        if context.author.id == access_list:
+        if context.author.id in access_list:
             mention_id = context.mentions[0].id
             access_list.remove(mention_id)
             await context.message.delete()

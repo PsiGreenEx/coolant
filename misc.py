@@ -6,7 +6,7 @@ import asyncio
 import json
 from discord.ext import commands, tasks
 # local modules
-from log_print import log_print
+from library import *
 from admin import status_movies
 
 with open("data/join_messages.json", "r") as message_file:
@@ -74,6 +74,13 @@ class Miscellaneous(commands.Cog):
                 name="Voice",
                 value="Join <#853038740863451186> to create a temporary VC. You have full perms for this vc.\n\n"
                       "`.vcpref [user_limit [channel name]]`: Shows you your set preferences if blank. Allows you to modify some of your default VC settings."
+            )
+
+        if category.lower() in ("games", "game", "gambling", ""):
+            help_embed.add_field(
+                name="Games",
+                value="`.inv`: Show your inventory.\n\n"
+                      "`.claim`: Claim your daily AlloyTokens."
             )
 
         await context.send(embed=help_embed)

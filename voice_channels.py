@@ -3,7 +3,7 @@ import json
 import discord
 from discord.ext import commands
 # local modules
-from log_print import log_print
+from library import *
 
 
 class VoiceChannels(commands.Cog):

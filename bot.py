@@ -6,7 +6,7 @@ import random
 import asyncio
 from discord.ext import commands
 # local modules
-from log_print import log_print
+from library import *
 from admin import Admin
 from misc import Miscellaneous
 from jarvis import Jarvis, jarvis_command
@@ -17,13 +17,17 @@ intents = discord.Intents.all()
 
 with open("data/bot_data.json", "r") as bot_data_file:
     bot_data: dict = json.loads(bot_data_file.read())
-    TOKEN = bot_data["token"]
-    CREATE_CHANNEL_ID = bot_data["voice_chat_id"]
-    JOIN_CHANNEL_ID = bot_data["join_channel_id"]
-    MEMBER_ROLE_ID = bot_data["member_role_id"]
+    TOKEN: str = bot_data["token"]
+    CREATE_CHANNEL_ID: int = bot_data["voice_chat_id"]
+    JOIN_CHANNEL_ID: int = bot_data["join_channel_id"]
+    MEMBER_ROLE_ID: int = bot_data["member_role_id"]
+    ADMIN_LIST: list[int] = bot_data["admin_access_list"]
+    DEBUG_MODE: bool = bot_data["debug_mode"]
 
 prefix = '.'
-client = commands.Bot(command_prefix=prefix, intents=intents, debug_guilds=[bot_data['alloy_guild_id'], bot_data['bot_test_guild_id']])
+debug_guilds = []
+if DEBUG_MODE: debug_guilds = [bot_data['alloy_guild_id'], bot_data['bot_test_guild_id']]
+client = commands.Bot(command_prefix=prefix, intents=intents, debug_guilds=debug_guilds)
 
 client.remove_command("help")
 
@@ -40,6 +44,11 @@ repeat_message_author = ""
 repeat_message_count = 0
 
 
+# class CoolantClient(commands.Bot):
+#     def __init__(self, **options):
+#         super().__init__(**options)
+
+
 # Ready
 @client.event
 async def on_ready():
@@ -47,10 +56,13 @@ async def on_ready():
 
 
 @client.event
-async def on_message(message):
+async def on_message(message: discord.Message):
     message_content: str = message.content.lower()
 
     if message.author == client.user:
+        return
+
+    if str(client.user) == "coolant.#9686" and message.guild.id == bot_data["bot_test_guild_id"]:
         return
     
     if message.channel.type == discord.ChannelType.private:
@@ -107,5 +119,5 @@ if __name__ == "__main__":
     client.add_cog(Miscellaneous(client, JOIN_CHANNEL_ID, MEMBER_ROLE_ID))
     client.add_cog(Jarvis(client))
     client.add_cog(VoiceChannels(client, CREATE_CHANNEL_ID, MEMBER_ROLE_ID))
-    client.add_cog(Games(client))
+    client.add_cog(Games(client, ADMIN_LIST))
     client.run(TOKEN)

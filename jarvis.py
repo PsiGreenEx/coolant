@@ -5,7 +5,7 @@ import asyncio
 import json
 from discord.ext import commands, tasks
 # local modules
-from log_print import log_print
+from library import *
 
 VALUE_CATEGORY = {
     "SUPERWACK": 0,
