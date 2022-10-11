@@ -30,7 +30,7 @@ class Games(commands.Cog):
 
     # Save Game Data to JSON
     def save_data(self):
-        with open('../store/game_data.json', 'w', encoding='utf-8') as f:
+        with open('./store/game_data.json', 'w', encoding='utf-8') as f:
             json.dump(self.game_data_dict, f, ensure_ascii=False, indent=2)
 
     # Get User Data and initialize if needed
