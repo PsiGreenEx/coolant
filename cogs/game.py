@@ -36,7 +36,7 @@ class Games(commands.Cog):
     # Get User Data and initialize if needed
     def get_user_data(self, user_id: int, reset=False) -> dict:
         if str(user_id) not in self.game_data_dict or reset:
-            self.game_data_dict[str(user_id)] = copy.deepcopy(self.game_info_dict["default_user"])
+            self.game_data_dict[str(user_id)] = copy.deepcopy(self.GAME_INFO_DICT["default_user"])
             self.save_data()
         return self.game_data_dict[str(user_id)]
 
