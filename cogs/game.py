@@ -7,27 +7,30 @@ import copy
 import random
 from discord.ext import commands
 # local modules
-from library import *
+import coolant
 
 
 class Games(commands.Cog):
-    def __init__(self, client, admin_list: list[int]):
+    def __init__(self, client: coolant.CoolantBot):
         self.client = client
-        self.ADMIN_LIST = admin_list
+
+        with open("./data/bot_data.json", "r") as f:
+            bot_data = json.loads(f.read())
+            self.ADMIN_LIST: list[int] = bot_data["admin_access_list"]
 
         # Game Information (such as item data)
-        with open("data/game_info.json", "r") as f:
+        with open("./data/game_info.json", "r") as f:
             self.GAME_INFO_DICT: dict = json.loads(f.read())
 
         self.ITEM_INFO_DICT: dict = self.GAME_INFO_DICT['items']
 
         # Game Data (such as players' inventories)
-        with open("store/game_data.json", "r") as f:
+        with open("./store/game_data.json", "r") as f:
             self.game_data_dict: dict = json.loads(f.read())
 
     # Save Game Data to JSON
     def save_data(self):
-        with open('store/game_data.json', 'w', encoding='utf-8') as f:
+        with open('../store/game_data.json', 'w', encoding='utf-8') as f:
             json.dump(self.game_data_dict, f, ensure_ascii=False, indent=2)
 
     # Get User Data and initialize if needed
@@ -126,7 +129,7 @@ class Games(commands.Cog):
             title=f"Page {page} of {max_page}\n"
                   f"{member.nick}'s Inventory:",
             description=f"**🪙 AlloyTokens:** {member_game_data['tokens']}\n"
-                        f"      **✨ Shinies:** {member_game_data['shinies']}",
+                        f"**✨ Shinies:** {member_game_data['shinies']}",
             color=0x006AF5
         )
 
@@ -136,6 +139,8 @@ class Games(commands.Cog):
 
         return inventory_embed
 
+    # Commands
+    # Inventory
     @commands.command(name="inventory", aliases=["inv"])
     async def inventory(self, context: commands.Context, page: int = 1):
         author = context.author
@@ -143,8 +148,9 @@ class Games(commands.Cog):
         inventory_embed = self.generate_inventory_embed(author, page)
 
         await context.reply(embed=inventory_embed)
-        await log_print(f"{author} checked their inventory.")
+        await coolant.log_print(f"{author} checked their inventory.")
 
+    # Daily Claim
     @commands.command(name="daily", aliases=["day", "claim"])
     async def daily(self, context: commands.Context):
         member_game_data = self.get_user_data(context.author.id)
@@ -159,7 +165,7 @@ class Games(commands.Cog):
 
             member_game_data['daily']['when_last_claimed'] = date.today().isoformat()
             self.update_user_data(context.author.id, member_game_data)
-            await log_print(f"{context.author} claimed their dailies.")
+            await coolant.log_print(f"{context.author} claimed their dailies.")
         else:
             message = "You've already claimed your AlloyTokens for today!"
 
@@ -168,6 +174,11 @@ class Games(commands.Cog):
     # TODO: Trash Item
     @commands.command(name="trash_item", aliases=["trash"])
     async def trash_item(self, context: commands.Context):
+        pass
+
+    # TODO: Spin the Slots
+    @commands.command(name="slots")
+    async def spin_slots(self, context: commands.Context):
         pass
 
     # Admin Commands
@@ -184,7 +195,7 @@ class Games(commands.Cog):
             user_id = int(user_mention.strip('<@!>'))
 
         self.add_item_to_inventory(user_id, {"id": item_id, "count": count})
-        await log_print(f"{context.author} gave item {item_id} to {user_id}.")
+        await coolant.log_print(f"{context.author} gave item {item_id} to {user_id}.")
 
     # Take Item
     @commands.command(name="take_item", aliases=["take"])
@@ -199,4 +210,4 @@ class Games(commands.Cog):
             user_id = int(user_mention.strip('<@!>'))
 
         self.remove_item_from_inventory(user_id, item_id, count)
-        await log_print(f"{context.author} took {count} {item_id} from {user_id}.")
+        await coolant.log_print(f"{context.author} took {count} {item_id} from {user_id}.")

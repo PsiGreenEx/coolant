@@ -2,52 +2,56 @@
 
 import discord
 import random
-import asyncio
 import json
 from discord.ext import commands, tasks
 # local modules
-from library import *
-from admin import status_movies
-
-with open("data/join_messages.json", "r") as message_file:
-    JOIN_MESSAGES = json.loads(message_file.read())
+import coolant
 
 
 class Miscellaneous(commands.Cog):
-    def __init__(self, client, join_channel_id: int, member_role_id: int):
-        self.client = client
-        self.join_channel_id = join_channel_id
-        self.member_role_id = member_role_id
+    def __init__(self, bot_client: coolant.CoolantBot):
+        self.bot = bot_client
         self.auto_change_status.start()
         self.dud_messages = [0]
+
+        with open("./data/bot_data.json", "r") as f:
+            bot_data = json.loads(f.read())
+            self.join_channel_id: int = bot_data["join_channel_id"]
+            self.member_role_id: int = bot_data["member_role_id"]
+
+        with open("./data/status_movies.json", 'r') as status_movies_file:
+            self.status_movies: list = json.loads(status_movies_file.read())
+
+        with open("./data/join_messages.json", "r") as message_file:
+            self.JOIN_MESSAGES = json.loads(message_file.read())
 
     # Join message and role add.
     @commands.Cog.listener("on_member_join")
     async def join_greet(self, member: discord.Member):
-        join_channel = self.client.get_channel(self.join_channel_id)
+        join_channel = self.bot.get_channel(self.join_channel_id)
         member_role = member.guild.get_role(self.member_role_id)
-        await join_channel.send(random.choice(JOIN_MESSAGES["join"]).format(member.mention))
+        await join_channel.send(random.choice(self.JOIN_MESSAGES["join"]).format(member.mention))
         await member.add_roles(member_role)
 
     # Leave message
     @commands.Cog.listener("on_member_remove")
     async def leave_message(self, member: discord.Member):
-        join_channel = self.client.get_channel(self.join_channel_id)
-        await join_channel.send(random.choice(JOIN_MESSAGES["leave"]).format(member))
+        join_channel = self.bot.get_channel(self.join_channel_id)
+        await join_channel.send(random.choice(self.JOIN_MESSAGES["leave"]).format(member))
 
     # Auto Status Change
     @tasks.loop(hours=12)
     async def auto_change_status(self):
-        await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(status_movies)))
-        await log_print("Automatically changed status.")
+        await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(self.status_movies)))
+        await coolant.log_print("Automatically changed status.")
 
     @auto_change_status.before_loop
     async def before_status_loop(self):
-        await self.client.wait_until_ready()
+        await self.bot.wait_until_ready()
 
-    @commands.command(name='help')
+    @commands.slash_command(name='help', description="Displays the help menu")
     async def help(self, context, category=""):
-        # TODO Separate help fields into other modules.
+        # TODO: Separate help fields into other modules.
         help_embed = discord.Embed(
             title="Help",
             description="Go yell at Psi to add more features!",
@@ -83,30 +87,26 @@ class Miscellaneous(commands.Cog):
                       "`.claim`: Claim your daily AlloyTokens."
             )
 
-        await context.send(embed=help_embed)
+        await context.respond(embed=help_embed)
 
-    @commands.command(name='fuse')
-    async def fuse(self, context, name1: str, name2: str, use_nickname="no"):
+    @commands.slash_command(name='fuse', description="Generates Dragon Ball Fusion name by combining two names together.")
+    async def fuse(self, context: discord.ApplicationContext, user1: discord.User, user2: discord.User, use_nickname: bool = False):
         title1 = None
         title2 = None
         new_title = ""
 
-        await log_print(f"{str(context.author)} used fuse.")
+        await coolant.log_print(f"{str(context.author)} used fuse.")
 
         # Pull users if mentioned
-        if name1.startswith('<@') and name1.endswith('>'):
-            user1 = await context.guild.fetch_member(name1.strip('<@!>'))
-            if use_nickname in ("yes", "true"):
-                name1 = user1.display_name
-            else:
-                name1 = user1.name
+        if use_nickname:
+            name1 = user1.display_name
+        else:
+            name1 = user1.name
 
-        if name2.startswith('<@') and name2.endswith('>'):
-            user2 = await context.guild.fetch_member(name2.strip('<@!>'))
-            if use_nickname in ("yes", "true"):
-                name2 = user2.display_name
-            else:
-                name2 = user2.name
+        if use_nickname:
+            name2 = user2.display_name
+        else:
+            name2 = user2.name
 
         # Strip first text from names with titles (usually nicknames)
         if "|" in name1:
@@ -130,14 +130,13 @@ class Miscellaneous(commands.Cog):
         if title1 is not None and title2 is not None:
             new_title = " | " + title1[:len(title1) // 2] + title2[len(title2) // 2:]
 
-        await asyncio.sleep(0.25)
-        await context.reply(new_name + new_title)
+        await context.respond(new_name + new_title)
 
-    @commands.command(name="quote")
-    async def quote(self, context: discord.ext.commands.Context, *args):
-        pass
+    @commands.command(name="clam")
+    async def clam(self, context: commands.Context):
+        await context.reply("https://cdn.discordapp.com/attachments/596391083311759412/1029178643580203089/CLAMd.png")
 
-    @commands.slash_command()
+    @commands.slash_command(description="No Way.")
     @commands.guild_only()
     async def flurgus(self, context: discord.ApplicationContext):
         await context.respond("No Way.")

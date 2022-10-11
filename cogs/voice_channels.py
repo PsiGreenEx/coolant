@@ -3,21 +3,24 @@ import json
 import discord
 from discord.ext import commands
 # local modules
-from library import *
+import coolant
 
 
 class VoiceChannels(commands.Cog):
-    def __init__(self, client, create_channel_id: int, member_role_id: int):
-        self.client = client
-        self.create_channel_id: int = create_channel_id
-        self.member_role_id = member_role_id
+    def __init__(self, bot_client: coolant.CoolantBot):
+        self.bot = bot_client
         self.channel_list = []
 
-        with open("store/vc_preferences.json", "r") as preference_file:
-            self.vc_preferences = json.loads(preference_file.read())
+        with open("./data/bot_data.json", 'r') as f:
+            bot_data = json.loads(f.read())
+            self.create_channel_id: int = bot_data["voice_chat_id"]
+            self.member_role_id: int = bot_data["member_role_id"]
+
+        with open("./store/vc_preferences.json", "r") as f:
+            self.vc_preferences = json.loads(f.read())
 
     @commands.command(name="vcpref")
-    async def vcpref(self, context: discord.ext.commands.Context, user_limit=-1, channel_name=""):
+    async def vcpref(self, context: commands.Context, user_limit=-1, channel_name=""):
         author_id = str(context.author.id)
 
         if not any(author_id in key for key in self.vc_preferences):
@@ -29,7 +32,7 @@ class VoiceChannels(commands.Cog):
         if channel_name != "":
             self.vc_preferences[author_id][1] = channel_name
 
-        with open("store/vc_preferences.json", "w") as preference_file:
+        with open("../store/vc_preferences.json", "w") as preference_file:
             json.dump(self.vc_preferences, preference_file)
 
         await context.send(f"{context.author.mention}\nYour preferences are:\n"
@@ -63,11 +66,11 @@ class VoiceChannels(commands.Cog):
                                                                category=channel.category, user_limit=user_limit)
                 self.channel_list.append(new_channel)
 
-                await log_print(f"Created voice channel \"{channel_name}\".")
+                await coolant.log_print(f"Created voice channel \"{channel_name}\".")
                 await member.move_to(new_channel)
         if before.channel in self.channel_list:
             if len(before.channel.members) == 0:
-                await log_print(f"Deleted voice channel \"{before.channel.name}\".")
+                await coolant.log_print(f"Deleted voice channel \"{before.channel.name}\".")
 
                 self.channel_list.remove(before.channel)
                 await before.channel.delete()
