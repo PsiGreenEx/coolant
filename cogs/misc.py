@@ -65,6 +65,10 @@ class Miscellaneous(commands.Cog):
                     discord.OptionChoice(
                         name="Ball Scans",
                         value="ball scans"
+                    ),
+                    discord.OptionChoice(
+                        name="Slots",
+                        value="slots"
                     )
                 ],
                 default=""
@@ -78,13 +82,26 @@ class Miscellaneous(commands.Cog):
             description="Go yell at Psi to add more features!",
             color=0x006AF5
         )
-        if category.lower() in ("ball scans", "ball scan", ""):
+
+        if category.lower() in ("ball scans", ""):
             help_embed.add_field(
                 name="Ball Scans",
                 value="Type \"jarvis, scan the balls of \" then mention the user you wish to scan.\n\n"
                       "Alternatively, you can type \"jarvis, scan this guys balls\" when replying to a message.\n\n"
                       "You can scan your own balls with \"jarvis, scan my balls\".\n\n"
-                      "(The content of the message doesn't really matter as long as it contains 'balls' and 'scan'.)",
+                      "(The content of the message doesn't really matter as long as it contains 'balls' and 'scan'.)"
+            )
+
+        if category.lower() in ("slots", ""):
+            help_embed.add_field(
+                name="Slots",
+                value="🍇 🍒 🍊 🍉 🔔 💎 <:23:1029169299526529024>\n"
+                      "The payouts are as follows:\n\n"
+                      "Any Three Fruits: x1 (no profit)\n"
+                      "Three Matching Fruits: 2x\n"
+                      "Three Bells: 3x\n"
+                      "Three Diamonds: 4x\n"
+                      "Three <:23:1029169299526529024>s: 23x"
             )
 
         await context.respond(embed=help_embed)
