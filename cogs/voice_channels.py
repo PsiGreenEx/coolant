@@ -19,8 +19,27 @@ class VoiceChannels(commands.Cog):
         with open("./store/vc_preferences.json", "r") as f:
             self.vc_preferences = json.loads(f.read())
 
-    @commands.command(name="vcpref")
-    async def vcpref(self, context: commands.Context, user_limit=-1, channel_name=""):
+    @commands.slash_command(
+        name="vcpref",
+        description="Set your preferences for your personal voice chat.",
+        options=[
+            discord.Option(
+                int,
+                name="userlimit",
+                description="Maximum number of users.",
+                max_value=99,
+                min_value=-1,
+                default=-1
+            ),
+            discord.Option(
+                str,
+                name="channelname",
+                description="Name of your channel.",
+                default=""
+            )
+        ]
+    )
+    async def vcpref(self, context: discord.ApplicationContext, user_limit: int, channel_name: str):
         author_id = str(context.author.id)
 
         if not any(author_id in key for key in self.vc_preferences):
@@ -32,12 +51,15 @@ class VoiceChannels(commands.Cog):
         if channel_name != "":
             self.vc_preferences[author_id][1] = channel_name
 
-        with open("../store/vc_preferences.json", "w") as preference_file:
+        with open("./store/vc_preferences.json", "w") as preference_file:
             json.dump(self.vc_preferences, preference_file)
 
-        await context.send(f"{context.author.mention}\nYour preferences are:\n"
-                           f"User Limit: {str(self.vc_preferences[author_id][0])}\n"
-                           f"Channel Name: {self.vc_preferences[author_id][1].format(context.author.name)}")
+        embed = discord.Embed(title="Your preferences are:", color=0x006AF5, fields=[
+            discord.EmbedField("User Limit", str(self.vc_preferences[author_id][0]), True),
+            discord.EmbedField("Channel Name", self.vc_preferences[author_id][1].format(context.author.name), True)
+        ])
+
+        await context.respond(embed=embed)
 
     # Creates temporary voice channel on join of "creation channel"
     @commands.Cog.listener()

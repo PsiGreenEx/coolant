@@ -1,5 +1,5 @@
 # game.py
-
+import asyncio
 import json
 import discord
 from datetime import date
@@ -47,7 +47,8 @@ class Games(commands.Cog):
 
     # Add item to user's inventory
     def add_item_to_inventory(self, user_id: int, new_item_data: dict):
-        user_inventory: list[list] = self.game_data_dict[str(user_id)]["inventory"]
+        user_data: dict = self.get_user_data(user_id)
+        user_inventory: list[list] = user_data["inventory"]
         new_item_info: dict = self.ITEM_INFO_DICT[new_item_data["id"]]
         item_added = False
 
@@ -75,7 +76,8 @@ class Games(commands.Cog):
 
     # remove item from user's inventory
     def remove_item_from_inventory(self, user_id: int, item_id: str, count=-1):
-        user_inventory: list[list] = self.game_data_dict[str(user_id)]["inventory"]
+        user_data: dict = self.get_user_data(user_id)
+        user_inventory: list[list] = user_data["inventory"]
 
         item_removed = False
 
@@ -111,6 +113,7 @@ class Games(commands.Cog):
             inline=False
         )
 
+    # Create Embed of User's Inventory
     def generate_inventory_embed(self, member: discord.Member, page: int = 1) -> discord.Embed:
         member_game_data = self.get_user_data(member.id)
         member_inventory: list[list] = member_game_data["inventory"]
@@ -128,8 +131,8 @@ class Games(commands.Cog):
         inventory_embed = discord.Embed(
             title=f"Page {page} of {max_page}\n"
                   f"{member.nick}'s Inventory:",
-            description=f"**🪙 AlloyTokens:** {member_game_data['tokens']}\n"
-                        f"**✨ Shinies:** {member_game_data['shinies']}",
+            description=f"**🪙 AlloyTokens:** {member_game_data['tokens']:,}\n"
+                        f"**✨ Shinies:** {member_game_data['shinies']:,}",
             color=0x006AF5
         )
 
@@ -141,73 +144,120 @@ class Games(commands.Cog):
 
     # Commands
     # Inventory
-    @commands.command(name="inventory", aliases=["inv"])
-    async def inventory(self, context: commands.Context, page: int = 1):
+    @commands.slash_command(
+        name="inventory",
+        description="Shows your inventory.",
+        options=[
+            discord.Option(
+                int,
+                name="page",
+                description="The page number of your inventory.",
+                min_value=1,
+                default=1
+            )
+        ]
+    )
+    async def inventory(self, context: discord.ApplicationContext, page):
         author = context.author
 
         inventory_embed = self.generate_inventory_embed(author, page)
 
-        await context.reply(embed=inventory_embed)
+        await context.respond(embed=inventory_embed)
         await coolant.log_print(f"{author} checked their inventory.")
 
     # Daily Claim
-    @commands.command(name="daily", aliases=["day", "claim"])
-    async def daily(self, context: commands.Context):
+    @commands.slash_command(
+        name="claim",
+        description="Claim your daily tokens!"
+    )
+    async def daily(self, context: discord.ApplicationContext):
         member_game_data = self.get_user_data(context.author.id)
         if date.fromisoformat(member_game_data['daily']['when_last_claimed']) < date.today():
             member_game_data['tokens'] += member_game_data['daily']['tokens_per_claim']
-            message = f"You claimed {member_game_data['daily']['tokens_per_claim']} AlloyTokens. Your total is 🪙 {member_game_data['tokens']}."
+            message = f"You claimed {member_game_data['daily']['tokens_per_claim']:,} AlloyTokens. Your total is 🪙 {member_game_data['tokens']:,}."
 
             if random.random() <= member_game_data['daily']['shiny_chance']:
                 member_game_data['shinies'] += member_game_data['daily']['shinies_per_claim']
-                message += f"\nWow! You found {member_game_data['daily']['shinies_per_claim']} ✨Shin{'y' if member_game_data['daily']['shinies_per_claim'] == 1 else 'ies'}✨! " \
-                           f"Your total is ✨ {member_game_data['shinies']}."
+                message += f"\nWow! You found {member_game_data['daily']['shinies_per_claim']:,} ✨Shin{'y' if member_game_data['daily']['shinies_per_claim'] == 1 else 'ies'}✨! " \
+                           f"Your total is ✨ {member_game_data['shinies']:,}."
 
             member_game_data['daily']['when_last_claimed'] = date.today().isoformat()
             self.update_user_data(context.author.id, member_game_data)
+            await context.respond(message)
             await coolant.log_print(f"{context.author} claimed their dailies.")
         else:
-            message = "You've already claimed your AlloyTokens for today!"
-
-        await context.reply(message)
-
-    # TODO: Trash Item
-    @commands.command(name="trash_item", aliases=["trash"])
-    async def trash_item(self, context: commands.Context):
-        pass
+            response = await context.respond("You've already claimed your AlloyTokens for today!")
+            await response.delete_original_response(delay=3)
 
     # TODO: Spin the Slots
-    @commands.command(name="slots")
-    async def spin_slots(self, context: commands.Context):
-        pass
 
     # Admin Commands
     # Give Item
-    @commands.command(name="give_item", aliases=["give"])
-    async def give_item(self, context: commands.Context, item_id: str, count: int, user_mention=""):
+    @commands.slash_command(
+        name="give",
+        description="Coolant Admin: Give user an item.",
+        options=[
+            discord.Option(
+                discord.User,
+                name="user",
+                description="User to give the item to."
+            ),
+            discord.Option(
+                str,
+                name="item_id",
+                description="The id of the item."
+            ),
+            discord.Option(
+                int,
+                name="count",
+                description="Number of the item. Default is 1.",
+                default=1
+            )
+        ]
+    )
+    async def give_item(self, context: discord.ApplicationContext, user: discord.User, item_id: str, count: int):
         if context.author.id not in self.ADMIN_LIST:
-            await context.reply("Improper perms!")
+            await context.respond("Improper perms!")
             return
-            
-        if user_mention == "":
-            user_id = context.author.id  # default to user sending command
-        else:
-            user_id = int(user_mention.strip('<@!>'))
+
+        user_id = user.id
 
         self.add_item_to_inventory(user_id, {"id": item_id, "count": count})
+        response: discord.Interaction = await context.respond("Gave item(s).")
         await coolant.log_print(f"{context.author} gave item {item_id} to {user_id}.")
+        await response.delete_original_response(delay=3)
 
     # Take Item
-    @commands.command(name="take_item", aliases=["take"])
-    async def take_item(self, context: commands.Context, item_id: str, count=-1, user_mention=""):
+    @commands.slash_command(
+        name="take",
+        description="Coolant Admin: Take an item from a user.",
+        options=[
+            discord.Option(
+                discord.User,
+                name="user",
+                description="The user to take the item from."
+            ),
+            discord.Option(
+                str,
+                name="item_id",
+                description="The id of the item."
+            ),
+            discord.Option(
+                int,
+                name="count",
+                description="Number of the item to remove. Default is all.",
+                default=-1
+            )
+        ]
+    )
+    async def take_item(self, context: discord.ApplicationContext, user: discord.User, item_id: str, count=-1):
         if context.author.id not in self.ADMIN_LIST:
-            await context.reply("Improper perms!")
+            await context.respond("Improper perms!")
             return
 
-        if user_mention == "":
-            user_id = context.author.id
-        else:
-            user_id = int(user_mention.strip('<@!>'))
+        user_id = user.id
 
         self.remove_item_from_inventory(user_id, item_id, count)
+        response: discord.Interaction = await context.respond("Removed item(s).")
         await coolant.log_print(f"{context.author} took {count} {item_id} from {user_id}.")
+        await response.delete_original_response(delay=3)

@@ -14,7 +14,7 @@ class Admin(commands.Cog):
 
         # admin command access
         with open("./data/bot_data.json", 'r') as bot_data_file:
-            self.access_list: list = json.loads(bot_data_file.read())["admin_access_list"]
+            self.ADMIN_LIST: list = json.loads(bot_data_file.read())["admin_access_list"]
 
         # Status list
         with open("./data/status_movies.json", 'r') as status_movies_file:
@@ -22,34 +22,77 @@ class Admin(commands.Cog):
 
     @commands.command(name="s")
     async def say(self, context):
-        if context.author.id in self.access_list:
+        if context.author.id in self.ADMIN_LIST:
             text = context.message.content.replace(".s", "")
             await context.send(text)
             await context.message.delete()
             await coolant.log_print(f"Said \"{text}\"")
 
-    @commands.command(name="cst")
-    async def change_status(self, context, choice=-1):
-        if context.author.id in self.access_list:
+    @commands.slash_command(
+        name="changestatus",
+        description="Coolant Admin: Change the status of coolant.",
+        options=[
+            discord.Option(
+                int,
+                name="choice",
+                description="The index of the status message. Leave blank for random.",
+                default=-1
+            )
+        ]
+    )
+    async def change_status(self, context: discord.ApplicationContext, choice: int):
+        if context.author.id in self.ADMIN_LIST:
             if choice == -1:
                 await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(self.status_movies)))
             else:
                 await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=self.status_movies[choice]))
-            await context.message.delete()
+            response = await context.respond("Status changed!")
             await coolant.log_print("Switched status message!")
+        else:
+            response = await context.respond("Improper perms!")
+        await response.delete_original_response(delay=3)
 
-    @commands.command(name='op')
-    async def op(self, context):
-        if context.author.id in self.access_list:
-            mention_id = context.mentions[0].id
-            self.access_list.append(mention_id)
-            await context.message.delete()
-            await coolant.log_print(f"Gave \"{str(mention_id)}\" permissions!")
+    @commands.slash_command(
+        name='op',
+        description="Coolant Admin: Make another user a Coolant Admin.",
+        options=[
+            discord.Option(
+                discord.User,
+                name="user",
+                description="The user to be opped."
+            )
+        ]
+    )
+    async def op(self, context: discord.ApplicationContext, user: discord.User):
+        if context.author.id in self.ADMIN_LIST:
+            self.ADMIN_LIST.append(user.id)
+            response = await context.respond(f"Opped {user}!")
+            await coolant.log_print(f"Gave \"{user}\" permissions!")
+        else:
+            response = await context.respond("Improper perms!")
 
-    @commands.command(name='deop')
-    async def deop(self, context):
-        if context.author.id in self.access_list:
-            mention_id = context.mentions[0].id
-            self.access_list.remove(mention_id)
-            await context.message.delete()
-            await coolant.log_print(f"Took away \"{str(mention_id)}\"'s permissions!")
+        await response.delete_original_response(delay=3)
+
+    @commands.slash_command(
+        name='deop',
+        description="Coolant Admin: Remove Coolant Admin access from user.",
+        options=[
+            discord.Option(
+                discord.User,
+                name="user",
+                description="User to remove access from."
+            )
+        ]
+    )
+    async def deop(self, context: discord.ApplicationContext, user: discord.User):
+        if context.author.id in self.ADMIN_LIST:
+            if user.id in self.ADMIN_LIST:
+                self.ADMIN_LIST.remove(user.id)
+                response = await context.respond(f"Deopped {user}!")
+                await coolant.log_print(f"Took away \"{user}\"'s permissions!")
+            else:
+                response = await context.respond("User is not a Coolant Admin.")
+        else:
+            response = await context.respond("Improper perms!")
+
+        await response.delete_original_response(delay=3)

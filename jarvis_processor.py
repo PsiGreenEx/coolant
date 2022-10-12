@@ -49,7 +49,7 @@ class JarvisProcessor:
         with open("store/ball_values.json", "r") as values_file:
             self.ball_values = json.loads(values_file.read())
 
-    def update_value(self, user_id, value):
+    def update_value(self, user_id: str, value: int):
         self.ball_values[user_id] = []
         self.ball_values[user_id].append(value)
         is_excluded = user_id in self.VALUE_EXCLUSION

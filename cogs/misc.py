@@ -40,7 +40,7 @@ class Miscellaneous(commands.Cog):
         await join_channel.send(random.choice(self.JOIN_MESSAGES["leave"]).format(member))
 
     # Auto Status Change
-    @tasks.loop(hours=12)
+    @tasks.loop(hours=6)
     async def auto_change_status(self):
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(self.status_movies)))
         await coolant.log_print("Automatically changed status.")
@@ -49,8 +49,29 @@ class Miscellaneous(commands.Cog):
     async def before_status_loop(self):
         await self.bot.wait_until_ready()
 
-    @commands.slash_command(name='help', description="Displays the help menu")
-    async def help(self, context, category=""):
+    @commands.slash_command(
+        name='help',
+        description="Displays the help menu",
+        options=[
+            discord.Option(
+                str,
+                name="category",
+                description="The help category to show.",
+                choices=[
+                    discord.OptionChoice(
+                        name="All",
+                        value=""
+                    ),
+                    discord.OptionChoice(
+                        name="Ball Scans",
+                        value="ball scans"
+                    )
+                ],
+                default=""
+            )
+        ]
+    )
+    async def help(self, context: discord.ApplicationContext, category: str):
         # TODO: Separate help fields into other modules.
         help_embed = discord.Embed(
             title="Help",
@@ -66,38 +87,38 @@ class Miscellaneous(commands.Cog):
                       "(The content of the message doesn't really matter as long as it contains 'balls' and 'scan'.)",
             )
 
-        if category.lower() in ("misc", "other", ""):
-            help_embed.add_field(
-                name="Misc",
-                value="`.fuse <name or user> <name or user> [use nickname?]`: Generates Dragon Ball Fusion name by combining two names together.\n\n"
-                      "`.quote`: Coming soon! (probably)"
-            )
-
-        if category.lower() in ("voice", "voice channel", "vc", ""):
-            help_embed.add_field(
-                name="Voice",
-                value="Join <#853038740863451186> to create a temporary VC. You have full perms for this vc.\n\n"
-                      "`.vcpref [user_limit [channel name]]`: Shows you your set preferences if blank. Allows you to modify some of your default VC settings."
-            )
-
-        if category.lower() in ("games", "game", "gambling", ""):
-            help_embed.add_field(
-                name="Games",
-                value="`.inv`: Show your inventory.\n\n"
-                      "`.claim`: Claim your daily AlloyTokens."
-            )
-
         await context.respond(embed=help_embed)
 
-    @commands.slash_command(name='fuse', description="Generates Dragon Ball Fusion name by combining two names together.")
-    async def fuse(self, context: discord.ApplicationContext, user1: discord.User, user2: discord.User, use_nickname: bool = False):
+    @commands.slash_command(
+        name='fuse',
+        description="Generates Dragon Ball Fusion name by combining two names together.",
+        options=[
+            discord.Option(
+                discord.User,
+                name="user1",
+                description="First user. Name will appear at the front."
+            ),
+            discord.Option(
+                discord.User,
+                name="user2",
+                description="Second user. Name will appear at the back."
+            ),
+            discord.Option(
+                bool,
+                name="nickname",
+                description="If it should fuse nicknames. Default is true.",
+                default=True
+            )
+        ]
+    )
+    async def fuse(self, context: discord.ApplicationContext, user1: discord.User, user2: discord.User, use_nickname: bool):
         title1 = None
         title2 = None
         new_title = ""
 
         await coolant.log_print(f"{str(context.author)} used fuse.")
 
-        # Pull users if mentioned
+        # Pull users names
         if use_nickname:
             name1 = user1.display_name
         else:
@@ -129,14 +150,24 @@ class Miscellaneous(commands.Cog):
         # fuse titles unless there is only one
         if title1 is not None and title2 is not None:
             new_title = " | " + title1[:len(title1) // 2] + title2[len(title2) // 2:]
+        elif title1 is not None:
+            new_title = " | " + title1
+        elif title2 is not None:
+            new_title = " | " + title2
 
         await context.respond(new_name + new_title)
 
-    @commands.command(name="clam")
-    async def clam(self, context: commands.Context):
-        await context.reply("https://cdn.discordapp.com/attachments/596391083311759412/1029178643580203089/CLAMd.png")
+    @commands.slash_command(
+        name="clam",
+        description="Clam your daily tokens!"
+    )
+    async def clam(self, context: discord.ApplicationContext):
+        await context.respond("https://cdn.discordapp.com/attachments/596391083311759412/1029178643580203089/CLAMd.png")
 
-    @commands.slash_command(description="No Way.")
+    @commands.slash_command(
+        name="flurgus",
+        description="No Way."
+    )
     @commands.guild_only()
     async def flurgus(self, context: discord.ApplicationContext):
         await context.respond("No Way.")
