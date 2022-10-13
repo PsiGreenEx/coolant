@@ -290,54 +290,54 @@ class Games(commands.Cog):
         await context.respond(f"**Bet is:** {bet}\n"
                               f"** <a:loading:1029896164981604423> Spinning:** \n"
                               f"❔ ❔ ❔")
-        async with context.channel.typing():
-            await asyncio.sleep(1)
-            await context.edit(content=f"**Bet is:** {bet}\n"
-                                       f"** <a:loading:1029896164981604423> Spinning:** \n"
-                                       f"{slot_symbols[symbol_one]} ❔ ❔")
-            await asyncio.sleep(1)
-            await context.edit(content=f"**Bet is:** {bet}\n"
-                                       f"** <a:loading:1029896164981604423> Spinning:** \n"
-                                       f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} ❔")
-            await asyncio.sleep(1)
-            await context.edit(content=f"**Bet is:** {bet}\n"
-                                       f"**Finished!** \n"
-                                       f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}")
-            message = f"**Bet is:** {bet}\n" \
-                      f"**Finished!** \n" \
-                      f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}\n\n"
 
-            # Calculate Payout
-            if symbol_one == symbol_two == symbol_three:  # if a match 3
-                if symbol_one in ("grapes", "cherry", "orange", "watermelon"):
-                    payout = bet * 2
-                    message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
-                               f"**Payout:** {payout} :coin: ({bet}×2)"
-                elif symbol_one == "bell":
-                    payout = bet * 3
-                    message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
-                               f"**Payout:** {payout} :coin: ({bet}×3)"
-                elif symbol_one == "diamond":
-                    payout = bet * 4
-                    message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
-                               f"**Payout:** {payout} :coin: ({bet}×4)"
-                elif symbol_one == "jackpot":
-                    payout = bet * 23
-                    message += f"**JACKPOT!!!**\n" \
-                               f"**Payout:** {payout} :coin: ({bet}×23) and a ✨Shiny✨!"
-                    jackpot = True
-            elif all(i in ("grapes", "cherry", "orange", "watermelon") for i in (symbol_one, symbol_two, symbol_three)):  # if a fruit match
-                payout = bet
-                message += f"**Triple Fruit!**\n" \
-                           f"**Payout:** {payout} :coin: ({bet}×1)"
-            else:
-                message += "Better luck next time!"
+        await asyncio.sleep(1)
+        await context.edit(content=f"**Bet is:** {bet}\n"
+                                   f"** <a:loading:1029896164981604423> Spinning:** \n"
+                                   f"{slot_symbols[symbol_one]} ❔ ❔")
+        await asyncio.sleep(1)
+        await context.edit(content=f"**Bet is:** {bet}\n"
+                                   f"** <a:loading:1029896164981604423> Spinning:** \n"
+                                   f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} ❔")
+        await asyncio.sleep(1)
+        await context.edit(content=f"**Bet is:** {bet}\n"
+                                   f"**Finished!** \n"
+                                   f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}")
+        message = f"**Bet is:** {bet}\n" \
+                  f"**Finished!** \n" \
+                  f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}\n\n"
 
-            member_game_data["tokens"] += payout
-            if jackpot: member_game_data["shinies"] += 1
-            self.save_data()
-            await asyncio.sleep(1)
-            await context.edit(content=message)
+        # Calculate Payout
+        if symbol_one == symbol_two == symbol_three:  # if a match 3
+            if symbol_one in ("grapes", "cherry", "orange", "watermelon"):
+                payout = bet * 2
+                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
+                           f"**Payout:** {payout} :coin: ({bet}×2)"
+            elif symbol_one == "bell":
+                payout = bet * 3
+                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
+                           f"**Payout:** {payout} :coin: ({bet}×3)"
+            elif symbol_one == "diamond":
+                payout = bet * 4
+                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
+                           f"**Payout:** {payout} :coin: ({bet}×4)"
+            elif symbol_one == "jackpot":
+                payout = bet * 23
+                message += f"**JACKPOT!!!**\n" \
+                           f"**Payout:** {payout} :coin: ({bet}×23) and a ✨Shiny✨!"
+                jackpot = True
+        elif all(i in ("grapes", "cherry", "orange", "watermelon") for i in (symbol_one, symbol_two, symbol_three)):  # if a fruit match
+            payout = bet
+            message += f"**Triple Fruit!**\n" \
+                       f"**Payout:** {payout} :coin: ({bet}×1)"
+        else:
+            message += "Better luck next time!"
+
+        member_game_data["tokens"] += payout
+        if jackpot: member_game_data["shinies"] += 1
+        self.save_data()
+        await asyncio.sleep(1)
+        await context.edit(content=message)
 
     # TODO: Sell items
 
