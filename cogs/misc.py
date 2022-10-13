@@ -111,12 +111,12 @@ class Miscellaneous(commands.Cog):
         description="Generates Dragon Ball Fusion name by combining two names together.",
         options=[
             discord.Option(
-                discord.User,
+                discord.Member,
                 name="user1",
                 description="First user. Name will appear at the front."
             ),
             discord.Option(
-                discord.User,
+                discord.Member,
                 name="user2",
                 description="Second user. Name will appear at the back."
             ),
@@ -128,7 +128,7 @@ class Miscellaneous(commands.Cog):
             )
         ]
     )
-    async def fuse(self, context: discord.ApplicationContext, user1: discord.User, user2: discord.User, use_nickname: bool):
+    async def fuse(self, context: discord.ApplicationContext, user1: discord.Member, user2: discord.Member, use_nickname: bool):
         title1 = None
         title2 = None
         new_title = ""
@@ -145,6 +145,8 @@ class Miscellaneous(commands.Cog):
             name2 = user2.display_name
         else:
             name2 = user2.name
+
+        first_line = f"**{name1} + {name2}:**\n"
 
         # Strip first text from names with titles (usually nicknames)
         if "|" in name1:
@@ -172,7 +174,7 @@ class Miscellaneous(commands.Cog):
         elif title2 is not None:
             new_title = " | " + title2
 
-        await context.respond(new_name + new_title)
+        await context.respond(first_line + new_name + new_title)
 
     @commands.slash_command(
         name="clam",

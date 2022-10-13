@@ -131,7 +131,7 @@ class Games(commands.Cog):
         inventory_embed = discord.Embed(
             title=f"Page {page} of {max_page}\n"
                   f"{member.nick}'s Inventory:",
-            description=f"**🪙 AlloyTokens:** {member_game_data['tokens']:,}\n"
+            description=f"**:coin: AlloyTokens:** {member_game_data['tokens']:,}\n"
                         f"**✨ Shinies:** {member_game_data['shinies']:,}",
             color=0x006AF5
         )
@@ -174,12 +174,12 @@ class Games(commands.Cog):
         member_game_data = self.get_user_data(context.author.id)
         if date.fromisoformat(member_game_data['daily']['when_last_claimed']) < date.today():
             member_game_data['tokens'] += member_game_data['daily']['tokens_per_claim']
-            message = f"You claimed {member_game_data['daily']['tokens_per_claim']:,} AlloyTokens. Your total is 🪙 {member_game_data['tokens']:,}."
+            message = f"You claimed {member_game_data['daily']['tokens_per_claim']:,} AlloyTokens. Your total is {member_game_data['tokens']:, :coin:}."
 
             if random.random() <= member_game_data['daily']['shiny_chance']:
                 member_game_data['shinies'] += member_game_data['daily']['shinies_per_claim']
                 message += f"\nWow! You found {member_game_data['daily']['shinies_per_claim']:,} ✨Shin{'y' if member_game_data['daily']['shinies_per_claim'] == 1 else 'ies'}✨! " \
-                           f"Your total is ✨ {member_game_data['shinies']:,}."
+                           f"Your total is {member_game_data['shinies']:, ✨}."
 
             member_game_data['daily']['when_last_claimed'] = date.today().isoformat()
             self.update_user_data(context.author.id, member_game_data)
@@ -188,6 +188,64 @@ class Games(commands.Cog):
         else:
             response = await context.respond("You've already claimed your AlloyTokens for today!")
             await response.delete_original_response(delay=3)
+
+    # Pay
+    @commands.slash_command(
+        name="pay",
+        description="Pay another user some tokens or shinies.",
+        options=[
+            discord.Option(
+                discord.Member,
+                name="user",
+                description="The user you will pay."
+            ),
+            discord.Option(
+                int,
+                name="amount",
+                description="Amount of currency to pay."
+            ),
+            discord.Option(
+                str,
+                name="currency",
+                description="Type of currency to pay. Tokens by default.",
+                default="tokens",
+                choices=[
+                    discord.OptionChoice(
+                        name="Tokens",
+                        value="tokens"
+                    ),
+                    discord.OptionChoice(
+                        name="Shinies",
+                        value="shinies"
+                    )
+                ]
+            )
+        ]
+    )
+    async def pay(self, context: discord.ApplicationContext, user: discord.Member, amount: int, currency: int):
+        payer_game_data: dict = self.get_user_data(context.author.id)
+        payee_game_data: dict = self.get_user_data(user.id)
+
+        if currency == "tokens":
+            if payer_game_data["tokens"] < amount:
+                response = await context.respond("Insufficient tokens.")
+                await response.delete_original_response(delay=3)
+                return
+            else:
+                payer_game_data["tokens"] -= amount
+                payee_game_data["tokens"] += amount
+                await context.respond(f"Paid {user.display_name} {amount} :coin:.")
+        elif currency == "shinies":
+            if payer_game_data["shinies"] < amount:
+                response = await context.respond("Insufficient shinies.")
+                await response.delete_original_response(delay=3)
+                return
+            else:
+                payer_game_data["shinies"] -= amount
+                payee_game_data["shinies"] += amount
+                await context.respond(f"Paid {user.nick} {amount} ✨.")
+
+        self.save_data()
 
     # Spin the Slots
     @commands.slash_command(
@@ -223,7 +281,6 @@ class Games(commands.Cog):
         member_game_data["tokens"] -= bet
 
         payout = 0
-        message = ""
         jackpot = False
 
         symbol_one = random.choice(list(slot_symbols.keys()))
@@ -246,38 +303,45 @@ class Games(commands.Cog):
             await context.edit(content=f"**Bet is:** {bet}\n"
                                        f"**Finished!** \n"
                                        f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}")
+            message = f"**Bet is:** {bet}\n" \
+                      f"**Finished!** \n" \
+                      f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}\n"
 
             # Calculate Payout
             if symbol_one == symbol_two == symbol_three:  # if a match 3
                 if symbol_one in ("grapes", "cherry", "orange", "watermelon"):
                     payout = bet * 2
-                    message = f"**Triple {slot_symbols[symbol_one]}!\n" \
-                              f"Payout:** {payout} ({bet} ×2)"
+                    message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
+                               f"**Payout:** {payout} :coin: ({bet}×2)"
                 elif symbol_one == "bell":
                     payout = bet * 3
-                    message = f"**Triple {slot_symbols[symbol_one]}!\n" \
-                              f"Payout:** {payout} ({bet} ×3)"
+                    message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
+                               f"**Payout:** {payout} :coin: ({bet}×3)"
                 elif symbol_one == "diamond":
                     payout = bet * 4
-                    message = f"**Triple {slot_symbols[symbol_one]}!\n" \
-                              f"Payout:** {payout} ({bet} ×4)"
+                    message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
+                               f"**Payout:** {payout} :coin: ({bet}×4)"
                 elif symbol_one == "jackpot":
                     payout = bet * 23
-                    message = f"**JACKPOT!!!\n" \
-                              f"Payout:** {payout} ({bet} ×23) and a ✨Shiny✨!"
+                    message += f"**JACKPOT!!!**\n" \
+                               f"**Payout:** {payout} :coin: ({bet}×23) and a ✨Shiny✨!"
                     jackpot = True
             elif all(i in ("grapes", "cherry", "orange", "watermelon") for i in (symbol_one, symbol_two, symbol_three)):  # if a fruit match
                 payout = bet
-                message = f"**Triple Fruit!\n" \
-                          f"Payout:** {payout} ({bet} ×1)"
+                message += f"**Triple Fruit!**\n" \
+                           f"**Payout:** {payout} :coin: ({bet}×1)"
             else:
-                message = "Better luck next time!"
+                message += "Better luck next time!"
 
             member_game_data["tokens"] += payout
             if jackpot: member_game_data["shinies"] += 1
             self.save_data()
             await asyncio.sleep(1)
             await context.send_followup(message)
+
+    # TODO: Sell items
+
+    # TODO: Secret secret. I've got a secret.
 
     # Admin Commands
     # Give Item
