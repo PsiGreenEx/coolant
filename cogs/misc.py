@@ -95,14 +95,14 @@ class Miscellaneous(commands.Cog):
         if category.lower() in ("slots", ""):
             help_embed.add_field(
                 name="Slots",
-                value="🍇 🍒 🍊 🍉 🔔 💎 <:23:1029169299526529024>\n"
+                value="🍇 🍒 🍊 🍉 🍋 🫐 🍑 🔔 💎 <:23:1029169299526529024>\n"
                       "The payouts are as follows:\n\n"
-                      "Any Three Fruits: x1 (no profit)\n"
-                      "Three Matching Fruits: 2x\n"
-                      "Three Bells: 3x\n"
-                      "Three Diamonds: 4x\n"
-                      "Three <:23:1029169299526529024>s: 23x\n\n"
-                      "~19% chance to make your money back and ~2% chance to make a profit."
+                      "Any Three Fruits: x1.5\n"
+                      "Three Matching Fruits: 4x\n"
+                      "Three Bells: 5x\n"
+                      "Three Diamonds: 6x\n"
+                      "Three <:23:1029169299526529024>s (jackpot): 23x\n\n"
+                      "~34% chance to make any match. 0.1% chance to hit jackpot."
             )
 
         await context.respond(embed=help_embed)

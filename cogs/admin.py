@@ -41,13 +41,14 @@ class Admin(commands.Cog):
         ]
     )
     async def change_status(self, context: discord.ApplicationContext, choice: int):
-        if context.author.id in self.ADMIN_LIST:
-            if choice == -1:
-                await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(self.status_movies)))
-            else:
-                await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=self.status_movies[choice]))
-            response = await context.respond("Status changed!")
-            await coolant.log_print("Switched status message!")
+        if context.author.id not in self.ADMIN_LIST:
+            await context.interaction.response.send_message(content="Improper perms!", ephemeral=True)
+            return
+
+        if choice == -1:
+            await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(self.status_movies)))
         else:
-            response = await context.respond("Improper perms!")
-        await response.delete_original_response(delay=3)
+            await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=self.status_movies[choice]))
+
+        await context.interaction.response.send_message(content="Status changed.", ephemeral=True)
+        await coolant.log_print("Switched status message!")

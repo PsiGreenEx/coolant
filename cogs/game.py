@@ -176,12 +176,12 @@ class Games(commands.Cog):
         member_game_data = self.get_user_data(context.author.id)
         if date.fromisoformat(member_game_data['daily']['when_last_claimed']) < date.today():
             member_game_data['tokens'] += member_game_data['daily']['tokens_per_claim']
-            message = f"You claimed {member_game_data['daily']['tokens_per_claim']:,} AlloyTokens. Your total is {member_game_data['tokens']:, :coin:}."
+            message = f"You claimed {member_game_data['daily']['tokens_per_claim']:,} AlloyTokens. Your total is {member_game_data['tokens']:,} :coin:."
 
             if random.random() <= member_game_data['daily']['shiny_chance']:
                 member_game_data['shinies'] += member_game_data['daily']['shinies_per_claim']
                 message += f"\nWow! You found {member_game_data['daily']['shinies_per_claim']:,} ✨Shin{'y' if member_game_data['daily']['shinies_per_claim'] == 1 else 'ies'}✨! " \
-                           f"Your total is {member_game_data['shinies']:, ✨}."
+                           f"Your total is {member_game_data['shinies']:,} ✨."
 
             member_game_data['daily']['when_last_claimed'] = date.today().isoformat()
             self.update_user_data(context.author.id, member_game_data)
@@ -240,7 +240,7 @@ class Games(commands.Cog):
             else:
                 payer_game_data["tokens"] -= amount
                 payee_game_data["tokens"] += amount
-                await context.respond(f"Paid {user.display_name} {amount} :coin:.")
+                await context.respond(f"Paid {user.mention} {amount} :coin:.")
         elif currency == "shinies":
             if payer_game_data["shinies"] < amount:
                 response = await context.respond("Insufficient shinies.")
@@ -249,7 +249,7 @@ class Games(commands.Cog):
             else:
                 payer_game_data["shinies"] -= amount
                 payee_game_data["shinies"] += amount
-                await context.respond(f"Paid {user.nick} {amount} ✨.")
+                await context.respond(f"Paid {user.mention} {amount} ✨.")
 
         self.save_data()
 
@@ -273,6 +273,9 @@ class Games(commands.Cog):
             "cherry": "🍒",
             "orange": "🍊",
             "watermelon": "🍉",
+            "lemon": "🍋",
+            "blueberries": "🫐",
+            "peach": "🍑",
             "bell": "🔔",
             "diamond": "💎",
             "jackpot": "<:23:1029169299526529024>"
@@ -281,7 +284,7 @@ class Games(commands.Cog):
         member_game_data = self.get_user_data(context.author.id)
 
         if bet > member_game_data["tokens"]:
-            await context.respond("Insufficient tokens!")
+            await context.interaction.response.send_message(content="Insufficient tokens!", ephemeral=True)
             return
 
         member_game_data["tokens"] -= bet
@@ -315,27 +318,27 @@ class Games(commands.Cog):
 
         # Calculate Payout
         if symbol_one == symbol_two == symbol_three:  # if a match 3
-            if symbol_one in ("grapes", "cherry", "orange", "watermelon"):
-                payout = bet * 2
-                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
-                           f"**Payout:** {payout} :coin: ({bet}×2)"
-            elif symbol_one == "bell":
-                payout = bet * 3
-                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
-                           f"**Payout:** {payout} :coin: ({bet}×3)"
-            elif symbol_one == "diamond":
+            if symbol_one in ("grapes", "cherry", "orange", "watermelon", "lemon", "blueberries", "peach"):  # fruit payout
                 payout = bet * 4
                 message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
                            f"**Payout:** {payout} :coin: ({bet}×4)"
-            elif symbol_one == "jackpot":
+            elif symbol_one == "bell":  # bell payout
+                payout = bet * 5
+                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
+                           f"**Payout:** {payout} :coin: ({bet}×5)"
+            elif symbol_one == "diamond":  # diamond payout
+                payout = bet * 6
+                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
+                           f"**Payout:** {payout} :coin: ({bet}×6)"
+            elif symbol_one == "jackpot":  # jackpot payout
                 payout = bet * 23
                 message += f"**JACKPOT!!!**\n" \
                            f"**Payout:** {payout} :coin: ({bet}×23) and a ✨Shiny✨!"
                 jackpot = True
-        elif all(i in ("grapes", "cherry", "orange", "watermelon") for i in (symbol_one, symbol_two, symbol_three)):  # if a fruit match
-            payout = bet
+        elif all(i in ("grapes", "cherry", "orange", "watermelon", "lemon", "blueberries", "peach") for i in (symbol_one, symbol_two, symbol_three)):  # if a fruit match
+            payout = round(bet * 1.5)
             message += f"**Triple Fruit!**\n" \
-                       f"**Payout:** {payout} :coin: ({bet}×1)"
+                       f"**Payout:** {payout} :coin: ({bet}×1.5)"
         else:
             message += "Better luck next time!"
 
@@ -345,9 +348,9 @@ class Games(commands.Cog):
         await asyncio.sleep(1)
         await context.edit(content=message)
 
-    # TODO: Evaluate items worth
+    # TODO: Evaluate items worth.
 
-    # TODO: Sell items
+    # TODO: Trade items.
 
     # TODO: Secret secret. I've got a secret.
 
@@ -380,12 +383,9 @@ class Games(commands.Cog):
             await context.interaction.response.send_message("Improper perms!", ephemeral=True)
             return
 
-        user_id = user.id
-
-        self.add_item_to_inventory(user_id, {"id": item_id, "count": count})
-        response: discord.Interaction = await context.respond("Gave item(s).")
-        await coolant.log_print(f"{context.author} gave item {item_id} to {user_id}.")
-        await response.delete_original_response(delay=3)
+        self.add_item_to_inventory(user.id, {"id": item_id, "count": count})
+        await context.interaction.response.send_message("Gave item(s).", ephemeral=True)
+        await coolant.log_print(f"{context.author} gave item {item_id} to {user.id}.")
 
     # Take Item
     @commands.slash_command(
@@ -415,12 +415,9 @@ class Games(commands.Cog):
             await context.interaction.response.send_message("Improper perms!", ephemeral=True)
             return
 
-        user_id = user.id
-
-        self.remove_item_from_inventory(user_id, item_id, count)
-        response: discord.Interaction = await context.respond("Removed item(s).")
-        await coolant.log_print(f"{context.author} took {count} {item_id} from {user_id}.")
-        await response.delete_original_response(delay=3)
+        self.remove_item_from_inventory(user.id, item_id, count)
+        await context.interaction.response.send_message("Removed item(s).", ephemeral=True)
+        await coolant.log_print(f"{context.author} took {count} {item_id} from {user.id}.")
 
     # Money
     @commands.slash_command(
@@ -457,7 +454,7 @@ class Games(commands.Cog):
         member_game_data: dict = self.get_user_data(user.id)
         if currency == "tokens":
             member_game_data["tokens"] = max(0, member_game_data["tokens"] + amount)
-            await context.respond(f"Gave {user.display_name} {amount} :coin:.")
+            await context.interaction.response.send_message(f"Gave {user.display_name} {amount} :coin:.", ephemeral=True)
         elif currency == "shinies":
             member_game_data["shinies"] = max(0, member_game_data["shinies"] + amount)
-            await context.respond(f"Gave {user.display_name} {amount} :sparkles:.")
+            await context.interaction.response.send_message(f"Gave {user.display_name} {amount} :sparkles:.", ephemeral=True)
