@@ -60,12 +60,13 @@ class Jarvis(commands.Cog):
         ]
     )
     async def value_update(self, context: discord.ApplicationContext, user: discord.User, value: int):
-        if context.author.id in self.ADMIN_LIST:
-            self.jarvis.update_value(user.id, int(value))
-            response = await context.respond("Value updated.")
-            await coolant.log_print(f"Manually updated {user}'s balls to value {value}.")
-        else:
-            response = await context.respond("Improper perms!")
+        if context.author.id not in self.ADMIN_LIST:
+            await context.interaction.response.send_message("Improper perms!", ephemeral=True)
+            return
+
+        self.jarvis.update_value(str(user.id), int(value))
+        response = await context.respond("Value updated.")
+        await coolant.log_print(f"Manually updated {user}'s balls to value {value}.")
 
         await response.delete_original_response(delay=3)
 
@@ -81,14 +82,13 @@ class Jarvis(commands.Cog):
         ]
     )
     async def dev_scan(self, context: discord.ApplicationContext, user: discord.User):
-        if context.author.id in self.ADMIN_LIST:
-            await context.respond("Yes sir, commencing ball scan...")
-            async with context.channel.typing():
-                if not any(str(user.id) in key for key in self.jarvis.ball_values):  # if there is not a value present
-                    self.jarvis.update_value(str(user.id), random.randint(-50, 50))
+        if context.author.id not in self.ADMIN_LIST:
+            await context.interaction.response.send_message("Improper perms!", ephemeral=True)
+            return
 
-                await asyncio.sleep(0.5)
-                await context.send_followup(self.jarvis.ball_values[str(user.id)][1])
-        else:
-            response = await context.respond("Improper perms!")
-            await response.delete_original_response()
+        await context.respond("Yes sir, commencing ball scan...")
+        async with context.channel.typing():
+            if not any(str(user.id) in key for key in self.jarvis.ball_values):  # if there is not a value present
+                self.jarvis.update_value(str(user.id), random.randint(-50, 50))
+            await asyncio.sleep(0.5)
+            await context.send_followup(self.jarvis.ball_values[str(user.id)][1])

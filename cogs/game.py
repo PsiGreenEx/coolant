@@ -99,13 +99,13 @@ class Games(commands.Cog):
         self.save_data()
 
     # Convert Item Information into Discord Embed Field
-    def item_dict_to_embed_field(self, item: dict, embed: discord.Embed):
+    def item_dict_to_embed_field(self, item: dict, embed: discord.Embed, inventory_slot: int):
         current_item_data = self.ITEM_INFO_DICT[item['id']]
 
         if current_item_data["max_count"] == 1:
-            formatted_name = current_item_data['name']
+            formatted_name = f"{inventory_slot}. {current_item_data['name']}"
         else:
-            formatted_name = f"{current_item_data['name']} x{item['count']}"
+            formatted_name = f"{inventory_slot}. {current_item_data['name']} x{item['count']}"
 
         embed.add_field(
             name=formatted_name,
@@ -137,8 +137,10 @@ class Games(commands.Cog):
         )
 
         if member_inventory[page-1]:
+            i = (page * 10) - 10
             for item in member_inventory[page-1]:
-                self.item_dict_to_embed_field(item, inventory_embed)
+                i += 1
+                self.item_dict_to_embed_field(item, inventory_embed, i)
 
         return inventory_embed
 
@@ -225,6 +227,10 @@ class Games(commands.Cog):
     async def pay(self, context: discord.ApplicationContext, user: discord.Member, amount: int, currency: int):
         payer_game_data: dict = self.get_user_data(context.author.id)
         payee_game_data: dict = self.get_user_data(user.id)
+
+        if amount <= 0:
+            await context.interaction.response.send_message("Amount needs to be above 0.", ephemeral=True)
+            return
 
         if currency == "tokens":
             if payer_game_data["tokens"] < amount:
@@ -339,6 +345,8 @@ class Games(commands.Cog):
         await asyncio.sleep(1)
         await context.edit(content=message)
 
+    # TODO: Evaluate items worth
+
     # TODO: Sell items
 
     # TODO: Secret secret. I've got a secret.
@@ -369,7 +377,7 @@ class Games(commands.Cog):
     )
     async def give_item(self, context: discord.ApplicationContext, user: discord.User, item_id: str, count: int):
         if context.author.id not in self.ADMIN_LIST:
-            await context.respond("Improper perms!")
+            await context.interaction.response.send_message("Improper perms!", ephemeral=True)
             return
 
         user_id = user.id
@@ -404,7 +412,7 @@ class Games(commands.Cog):
     )
     async def take_item(self, context: discord.ApplicationContext, user: discord.User, item_id: str, count=-1):
         if context.author.id not in self.ADMIN_LIST:
-            await context.respond("Improper perms!")
+            await context.interaction.response.send_message("Improper perms!", ephemeral=True)
             return
 
         user_id = user.id
@@ -413,3 +421,43 @@ class Games(commands.Cog):
         response: discord.Interaction = await context.respond("Removed item(s).")
         await coolant.log_print(f"{context.author} took {count} {item_id} from {user_id}.")
         await response.delete_original_response(delay=3)
+
+    # Money
+    @commands.slash_command(
+        name="money",
+        description="Coolant Admin: Add or subtract tokens/shinies from a user.",
+        options=[
+            discord.Option(
+                discord.Member,
+                name="user",
+                description="User you are giving to/taking from."
+            ),
+            discord.Option(
+                int,
+                name="amount",
+                description="Amount of currency. Use negative to subtract."
+            ),
+            discord.Option(
+                str,
+                name="currency",
+                description="Type of currency to modify.",
+                default="tokens",
+                choices=[
+                    discord.OptionChoice("Tokens", "tokens"),
+                    discord.OptionChoice("Shinies", "shinies")
+                ]
+            )
+        ]
+    )
+    async def money(self, context: discord.ApplicationContext, user: discord.Member, amount: int, currency: str):
+        if context.author.id not in self.ADMIN_LIST:
+            await context.interaction.response.send_message("Improper perms!", ephemeral=True)
+            return
+
+        member_game_data: dict = self.get_user_data(user.id)
+        if currency == "tokens":
+            member_game_data["tokens"] = max(0, member_game_data["tokens"] + amount)
+            await context.respond(f"Gave {user.display_name} {amount} :coin:.")
+        elif currency == "shinies":
+            member_game_data["shinies"] = max(0, member_game_data["shinies"] + amount)
+            await context.respond(f"Gave {user.display_name} {amount} :sparkles:.")

@@ -59,7 +59,7 @@ class VoiceChannels(commands.Cog):
             discord.EmbedField("Channel Name", self.vc_preferences[author_id][1].format(context.author.name), True)
         ])
 
-        await context.respond(embed=embed)
+        await context.interaction.response.send_message(embed=embed, ephemeral=True)
 
     # Creates temporary voice channel on join of "creation channel"
     @commands.Cog.listener()
