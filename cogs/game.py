@@ -305,7 +305,7 @@ class Games(commands.Cog):
                                        f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}")
             message = f"**Bet is:** {bet}\n" \
                       f"**Finished!** \n" \
-                      f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}\n"
+                      f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}\n\n"
 
             # Calculate Payout
             if symbol_one == symbol_two == symbol_three:  # if a match 3
@@ -337,7 +337,7 @@ class Games(commands.Cog):
             if jackpot: member_game_data["shinies"] += 1
             self.save_data()
             await asyncio.sleep(1)
-            await context.send_followup(message)
+            await context.edit(content=message)
 
     # TODO: Sell items
 

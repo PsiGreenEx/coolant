@@ -101,7 +101,8 @@ class Miscellaneous(commands.Cog):
                       "Three Matching Fruits: 2x\n"
                       "Three Bells: 3x\n"
                       "Three Diamonds: 4x\n"
-                      "Three <:23:1029169299526529024>s: 23x"
+                      "Three <:23:1029169299526529024>s: 23x\n\n"
+                      "~19% chance to make your money back and ~2% chance to make a profit."
             )
 
         await context.respond(embed=help_embed)
