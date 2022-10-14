@@ -66,7 +66,7 @@ class Jarvis(commands.Cog):
 
         self.jarvis.update_value(str(user.id), int(value))
         response = await context.respond("Value updated.")
-        await coolant.log_print(f"Manually updated {user}'s balls to value {value}.")
+        await self.bot.log_print(f"Manually updated {user}'s balls to value {value}.")
 
         await response.delete_original_response(delay=3)
 

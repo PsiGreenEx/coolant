@@ -9,8 +9,8 @@ import coolant
 
 
 class Admin(commands.Cog):
-    def __init__(self, client: coolant.CoolantBot):
-        self.client = client
+    def __init__(self, bot_client: coolant.CoolantBot):
+        self.bot = bot_client
 
         # admin command access
         with open("./data/bot_data.json", 'r') as bot_data_file:
@@ -26,7 +26,7 @@ class Admin(commands.Cog):
             text = context.message.content.replace(".s", "")
             await context.send(text)
             await context.message.delete()
-            await coolant.log_print(f"Said \"{text}\"")
+            await self.bot.log_print(f"{context.author} said \"{text}\"")
 
     @commands.slash_command(
         name="changestatus",
@@ -46,9 +46,9 @@ class Admin(commands.Cog):
             return
 
         if choice == -1:
-            await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(self.status_movies)))
+            await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(self.status_movies)))
         else:
-            await self.client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=self.status_movies[choice]))
+            await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=self.status_movies[choice]))
 
         await context.interaction.response.send_message(content="Status changed.", ephemeral=True)
-        await coolant.log_print("Switched status message!")
+        await self.bot.log_print("Switched status message!")

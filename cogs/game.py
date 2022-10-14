@@ -11,8 +11,8 @@ import coolant
 
 
 class Games(commands.Cog):
-    def __init__(self, client: coolant.CoolantBot):
-        self.client = client
+    def __init__(self, bot_client: coolant.CoolantBot):
+        self.bot = bot_client
 
         with open("./data/bot_data.json", "r") as f:
             bot_data = json.loads(f.read())
@@ -91,6 +91,9 @@ class Games(commands.Cog):
                         break
                     else:
                         item_data["count"] -= count
+                        if item_data['count'] <= 0:
+                            inventory_page.remove(item_data)
+                            if not inventory_page: user_inventory.remove(inventory_page)
                         item_removed = True
                         break
 
@@ -105,7 +108,7 @@ class Games(commands.Cog):
         if current_item_data["max_count"] == 1:
             formatted_name = f"{inventory_slot}. {current_item_data['name']}"
         else:
-            formatted_name = f"{inventory_slot}. {current_item_data['name']} x{item['count']}"
+            formatted_name = f"{inventory_slot}. {current_item_data['name']} ×{item['count']}"
 
         embed.add_field(
             name=formatted_name,
@@ -144,6 +147,16 @@ class Games(commands.Cog):
 
         return inventory_embed
 
+    # Sell Item (assuming the item is sellable and the player has those items)
+    def sell_item(self, user_id: int, inventory_slot: int, count: int):
+        user_game_data = self.get_user_data(user_id)
+
+        item_data: dict = user_game_data['inventory'][inventory_slot // 10][inventory_slot-1]
+        item_info: dict = self.ITEM_INFO_DICT[item_data['id']]
+
+        user_game_data['tokens'] += item_info['value'] * count
+        self.remove_item_from_inventory(user_id, item_data['id'], count)
+
     # Commands
     # Inventory
     @commands.slash_command(
@@ -165,7 +178,7 @@ class Games(commands.Cog):
         inventory_embed = self.generate_inventory_embed(author, page)
 
         await context.respond(embed=inventory_embed)
-        await coolant.log_print(f"{author} checked their inventory.")
+        await self.bot.log_print(f"{author} checked their inventory.")
 
     # Daily Claim
     @commands.slash_command(
@@ -186,10 +199,9 @@ class Games(commands.Cog):
             member_game_data['daily']['when_last_claimed'] = date.today().isoformat()
             self.update_user_data(context.author.id, member_game_data)
             await context.respond(message)
-            await coolant.log_print(f"{context.author} claimed their dailies.")
+            await self.bot.log_print(f"{context.author} claimed their dailies.")
         else:
-            response = await context.respond("You've already claimed your AlloyTokens for today!")
-            await response.delete_original_response(delay=3)
+            await context.interaction.response.send_message(content="Insufficient tokens!", ephemeral=True)
 
     # Pay
     @commands.slash_command(
@@ -348,7 +360,103 @@ class Games(commands.Cog):
         await asyncio.sleep(1)
         await context.edit(content=message)
 
-    # TODO: Evaluate items worth.
+    # Class for the Valuate Command View
+    class ValuateView(discord.ui.View):
+        def __init__(self, game, member_game_data: dict, selected_item: dict, selected_item_info: dict, inventory_slot: int, count: int, *items: discord.ui.Item):
+            super().__init__(*items, timeout=60)
+            self.game: Games = game
+            self.count = count
+            self.inventory_slot = inventory_slot
+            self.member_game_data = member_game_data
+            self.selected_item = selected_item
+            self.selected_item_info = selected_item_info
+
+        async def on_timeout(self):
+            for child in self.children:
+                child.disabled = True
+            await self.message.edit(view=self)
+
+        @discord.ui.button(
+            label="Sell",
+            style=discord.ButtonStyle.blurple
+        )
+        async def sell_button_callback(self, button: discord.Button, interaction: discord.Interaction):
+            if interaction.user != interaction.message.interaction.user:
+                await interaction.response.send_message(content="You can't touch that!", ephemeral=True)
+                return
+            button.disabled = True
+            button.label = "Sold"
+
+            self.game.sell_item(interaction.user.id, self.inventory_slot, self.count)
+
+            message = f"Sold **{self.selected_item_info['name']} ×{self.count}** for {self.selected_item_info['value'] * self.count} :coin:.\n" \
+                      f"Your total is now {self.member_game_data['tokens']:,} :coin:."
+
+            await interaction.response.edit_message(content=message, view=self)
+
+    # Valuate items worth.
+    @commands.slash_command(
+        name="valuate",
+        description="Determine an item's value and allows you to sell it.",
+        options=[
+            discord.Option(
+                int,
+                name="inventoryslot",
+                description="Slot number of the item you want to valuate.",
+                min_value=1
+            ),
+            discord.Option(
+                int,
+                name="amount",
+                description="Amount of item you wish to sell. Default is all.",
+                min_value=0,
+                default=0
+            ),
+            discord.Option(
+                bool,
+                name="quicksell",
+                description="Sell the item without the prompt, if possible.",
+                default=False
+            )
+        ]
+    )
+    async def valuate(self, context: discord.ApplicationContext, inventory_slot: int, amount: int, quick_sell: bool):
+        member_game_data = self.get_user_data(context.author.id)
+
+        inventory_page = inventory_slot // 10
+
+        try:
+            selected_item: dict = member_game_data["inventory"][inventory_page][inventory_slot-1]
+        except IndexError:
+            await context.interaction.response.send_message(content="That inventory slot is empty.", ephemeral=True)
+            return
+
+        selected_item_info = self.ITEM_INFO_DICT[selected_item["id"]]
+
+        if not selected_item_info["sellable"]:  # if item is unsellable
+            await context.interaction.response.send_message(content="This item is unsellable.", ephemeral=True)
+            return
+
+        if amount > selected_item['count']:
+            await context.interaction.response.send_message(content="You do not have enough of this item.", ephemeral=True)
+            return
+
+        if amount == 0:
+            amount = selected_item['count']
+
+        total_sale_value = selected_item_info['value'] * amount
+
+        message = f"**{selected_item_info['name']} ×{amount:,}:** {total_sale_value:,} :coin:\n" \
+                  f"({selected_item_info['value']:,} :coin: per item)"
+
+        if not quick_sell:
+            await context.respond(message, view=self.ValuateView(self, member_game_data, selected_item, selected_item_info, inventory_slot, amount))
+        else:
+            self.game.sell_item(context.author.id, inventory_slot, amount)
+
+            message = f"Sold **{self.selected_item_info['name']} ×{self.count}** for {self.selected_item_info['value'] * self.count} :coin:.\n" \
+                      f"Your total is now {self.member_game_data['tokens']:,} :coin:."
+            await context.respond(message)
 
     # TODO: Trade items.
 
@@ -385,7 +493,7 @@ class Games(commands.Cog):
 
         self.add_item_to_inventory(user.id, {"id": item_id, "count": count})
         await context.interaction.response.send_message("Gave item(s).", ephemeral=True)
-        await coolant.log_print(f"{context.author} gave item {item_id} to {user.id}.")
+        await self.bot.log_print(f"{context.author} gave item {item_id} to {user.id}.")
 
     # Take Item
     @commands.slash_command(
@@ -417,7 +525,7 @@ class Games(commands.Cog):
 
         self.remove_item_from_inventory(user.id, item_id, count)
         await context.interaction.response.send_message("Removed item(s).", ephemeral=True)
-        await coolant.log_print(f"{context.author} took {count} {item_id} from {user.id}.")
+        await self.bot.log_print(f"{context.author} took {count} {item_id} from {user.id}.")
 
     # Money
     @commands.slash_command(

@@ -43,7 +43,7 @@ class Miscellaneous(commands.Cog):
     @tasks.loop(hours=6)
     async def auto_change_status(self):
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(self.status_movies)))
-        await coolant.log_print("Automatically changed status.")
+        await self.bot.log_print("Automatically changed status.")
 
     @auto_change_status.before_loop
     async def before_status_loop(self):
@@ -134,7 +134,7 @@ class Miscellaneous(commands.Cog):
         title2 = None
         new_title = ""
 
-        await coolant.log_print(f"{str(context.author)} used fuse.")
+        await self.bot.log_print(f"{str(context.author)} used fuse.")
 
         # Pull users names
         if use_nickname:

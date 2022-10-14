@@ -1,5 +1,6 @@
 # coolant.py
 
+import logging
 import json
 from abc import ABC
 import discord
@@ -9,12 +10,6 @@ import asyncio
 from datetime import datetime
 # local modules
 from jarvis_processor import JarvisProcessor
-
-
-async def log_print(text: str):
-    print('[' + datetime.now().strftime("%x %X") + '] ' + text)
-    with open('log.txt', 'a') as log_file:
-        log_file.write('[' + datetime.now().strftime("%x %X") + '] ' + text + "\n")
 
 
 class CoolantBot(commands.Bot, ABC):
@@ -33,8 +28,18 @@ class CoolantBot(commands.Bot, ABC):
             self.PHRASE_DICT = reactions_dict["phrases"]
             self.REACT_DICT = reactions_dict["reactions"]
 
+        self.logger = logging.getLogger('discord')
+        self.logger.setLevel(logging.DEBUG)
+        handler = logging.FileHandler(filename='coolant.log', encoding='utf-8', mode='w')
+        handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+        self.logger.addHandler(handler)
+
+    async def log_print(self, text: str):
+        print('[' + datetime.now().strftime("%x %X") + '] ' + text)
+        self.logger.info(text)
+
     async def on_ready(self):
-        await log_print(f'{self.user} has connected to Discord!')
+        await self.log_print(f'{self.user} has connected to Discord!')
 
     async def on_message(self, message: discord.Message):
         message_content: str = message.content.lower()
@@ -73,13 +78,13 @@ class CoolantBot(commands.Bot, ABC):
             for key in self.PHRASE_DICT:
                 if key in message.content.lower():
                     await message.reply(self.PHRASE_DICT[key])
-                    await log_print(f"Auto replied to {key} with {self.PHRASE_DICT[key]}")
+                    await self.log_print(f"Auto replied to {key} with {self.PHRASE_DICT[key]}")
                     break
 
         # Reactions
         for key in self.REACT_DICT:
             if key in message.content.lower():
                 await message.add_reaction(self.get_emoji(self.REACT_DICT[key]))
-                await log_print(f"Auto reacted to {key} with emoji {self.REACT_DICT[key]}.")
+                await self.log_print(f"Auto reacted to {key} with emoji {self.REACT_DICT[key]}.")
 
         await self.process_commands(message)

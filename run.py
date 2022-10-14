@@ -1,4 +1,5 @@
 # run.py
+import logging
 import json
 import discord
 # local modules

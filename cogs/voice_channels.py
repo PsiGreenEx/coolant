@@ -88,11 +88,11 @@ class VoiceChannels(commands.Cog):
                                                                category=channel.category, user_limit=user_limit)
                 self.channel_list.append(new_channel)
 
-                await coolant.log_print(f"Created voice channel \"{channel_name}\".")
+                await self.bot.log_print(f"Created voice channel \"{channel_name}\".")
                 await member.move_to(new_channel)
         if before.channel in self.channel_list:
             if len(before.channel.members) == 0:
-                await coolant.log_print(f"Deleted voice channel \"{before.channel.name}\".")
+                await self.bot.log_print(f"Deleted voice channel \"{before.channel.name}\".")
 
                 self.channel_list.remove(before.channel)
                 await before.channel.delete()
