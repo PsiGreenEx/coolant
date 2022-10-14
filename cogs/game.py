@@ -452,10 +452,10 @@ class Games(commands.Cog):
         if not quick_sell:
             await context.respond(message, view=self.ValuateView(self, member_game_data, selected_item, selected_item_info, inventory_slot, amount))
         else:
-            self.game.sell_item(context.author.id, inventory_slot, amount)
+            self.sell_item(context.author.id, inventory_slot, amount)
 
-            message = f"Sold **{self.selected_item_info['name']} ×{self.count}** for {self.selected_item_info['value'] * self.count} :coin:.\n" \
-                      f"Your total is now {self.member_game_data['tokens']:,} :coin:."
+            message = f"Sold **{selected_item_info['name']} ×{amount}** for {selected_item_info['value'] * amount} :coin:.\n" \
+                      f"Your total is now {member_game_data['tokens']:,} :coin:."
             await context.respond(message)
 
     # TODO: Trade items.
