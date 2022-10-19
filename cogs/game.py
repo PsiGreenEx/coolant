@@ -106,9 +106,9 @@ class Games(commands.Cog):
         current_item_data = self.ITEM_INFO_DICT[item['id']]
 
         if current_item_data["max_count"] == 1:
-            formatted_name = f"{inventory_slot}. {current_item_data['name']}"
+            formatted_name = f"{inventory_slot}. {current_item_data['emoji']} {current_item_data['name']}"
         else:
-            formatted_name = f"{inventory_slot}. {current_item_data['name']} ×{item['count']}"
+            formatted_name = f"{inventory_slot}. {current_item_data['emoji']} {current_item_data['name']} ×{item['count']}"
 
         embed.add_field(
             name=formatted_name,
@@ -133,7 +133,7 @@ class Games(commands.Cog):
 
         inventory_embed = discord.Embed(
             title=f"Page {page} of {max_page}\n"
-                  f"{member.nick}'s Inventory:",
+                  f"{member.display_name}'s Inventory:",
             description=f"**:coin: AlloyTokens:** {member_game_data['tokens']:,}\n"
                         f"**✨ Shinies:** {member_game_data['shinies']:,}",
             color=0x006AF5
