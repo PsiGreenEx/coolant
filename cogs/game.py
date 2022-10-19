@@ -201,7 +201,7 @@ class Games(commands.Cog):
             await context.respond(message)
             await self.bot.log_print(f"{context.author} claimed their dailies.")
         else:
-            await context.interaction.response.send_message(content="Insufficient tokens!", ephemeral=True)
+            await context.interaction.response.send_message(content="You already claimed your tokens for today.", ephemeral=True)
 
     # Pay
     @commands.slash_command(
