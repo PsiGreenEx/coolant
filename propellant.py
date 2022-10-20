@@ -6,6 +6,12 @@ from abc import ABC
 import discord
 from discord.ext import commands
 from datetime import datetime
+from enum import Enum
+
+
+class Emojis:
+    TOKEN = "<:token:1032779021659951146>"
+    SHINY = "<:shiny:1032779020615553075>"
 
 
 class PropellantBot(commands.Bot, ABC):
