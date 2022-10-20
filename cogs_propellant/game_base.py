@@ -1,4 +1,4 @@
-# game.py
+# game_base.py
 import asyncio
 import json
 import discord
@@ -7,11 +7,10 @@ import copy
 import random
 from discord.ext import commands
 # local modules
-# noinspection PyUnresolvedReferences
 import propellant
 
 
-class Games(commands.Cog):
+class GameBase(commands.Cog):
     def __init__(self, bot_client: propellant.PropellantBot):
         self.bot = bot_client
 
@@ -372,7 +371,7 @@ class Games(commands.Cog):
     class ValuateView(discord.ui.View):
         def __init__(self, game, member_game_data: dict, selected_item: dict, selected_item_info: dict, inventory_slot: int, count: int, *items: discord.ui.Item):
             super().__init__(*items, timeout=60)
-            self.game: Games = game
+            self.game: GameBase = game
             self.count = count
             self.inventory_slot = inventory_slot
             self.member_game_data = member_game_data

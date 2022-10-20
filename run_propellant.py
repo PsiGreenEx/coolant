@@ -1,12 +1,12 @@
-# run.py
+# run_propellant.py
 import json
 import discord
 # local modules
 from propellant import PropellantBot
-from cogs.game import Games
+from cogs_propellant.game_base import GameBase
 
 if __name__ == "__main__":
-    with open("../data/bot_data.json", "r") as bot_data_file:
+    with open("data/bot_data.json", "r") as bot_data_file:
         bot_data: dict = json.loads(bot_data_file.read())
         TOKEN: str = bot_data["propellant_token"]
         MEMBER_ROLE_ID: int = bot_data["member_role_id"]
@@ -19,5 +19,5 @@ if __name__ == "__main__":
 
     bot = PropellantBot(intents=intents, debug_guilds=debug_guilds, command_prefix=PREFIX)
 
-    bot.add_cog(Games(bot))
+    bot.add_cog(GameBase(bot))
     bot.run(TOKEN)

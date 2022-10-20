@@ -1,4 +1,4 @@
-# run.py
+# run_coolant.py
 import json
 import discord
 # local modules
