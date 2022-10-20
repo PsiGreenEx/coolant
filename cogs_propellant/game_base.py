@@ -717,13 +717,12 @@ class GameBase(commands.Cog):
             return
 
         if shinywant > offeree_game_data['shinies']:
-            await context.interaction.response.send_message(content="They don't have that many shinies!",
-                                                            ephemeral=True)
+            await context.interaction.response.send_message(content="They don't have that many shinies!", ephemeral=True)
             return
 
         trade_embed = discord.Embed(
             color=0xE784FF,
-            title="Trade Offer",
+            title=f"Trade Offer for {user.display_name}",
             description=f"{message}"
         )
 
@@ -731,12 +730,6 @@ class GameBase(commands.Cog):
                               value=f"**{Emojis.TOKEN} AlloyTokens:** {tokenoffer:,}\n"
                                     f"**{Emojis.SHINY} Shinies:** {shinyoffer:,}",
                               inline=False)
-
-        if not offer_data_list:
-            trade_embed.add_field(
-                name="No Items.",
-                value="No items offered."
-            )
 
         for slot_item_data in offer_data_list:
             slot_item_info = self.bot.ITEM_INFO_DICT[slot_item_data['id']]
@@ -754,12 +747,6 @@ class GameBase(commands.Cog):
                               value=f"**{Emojis.TOKEN} AlloyTokens:** {tokenwant:,}\n"
                                     f"**{Emojis.SHINY} Shinies:** {shinywant:,}",
                               inline=False)
-
-        if not want_data_list:
-            trade_embed.add_field(
-                name="No Items.",
-                value="No items wanted."
-            )
 
         for slot_item_data in want_data_list:
             slot_item_info = self.bot.ITEM_INFO_DICT[slot_item_data['id']]
