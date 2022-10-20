@@ -7,7 +7,8 @@ import copy
 import random
 from discord.ext import commands
 # local modules
-from propellant_bot import propellant
+# noinspection PyUnresolvedReferences
+import propellant
 
 
 class Games(commands.Cog):
