@@ -134,11 +134,30 @@ class GameBase(commands.Cog):
     # Views and Other Classes
     # Inventory Page Buttons
     class InventoryView(discord.ui.View):
+        # noinspection PyUnresolvedReferences
         def __init__(self, game_base, user: discord.Member, page: int,  *items: discord.ui.Item):
             super().__init__(*items)
             self.game_base: GameBase = game_base
             self.user = user
             self.page = page
+
+            member_game_data = self.game_base.bot.get_user_data(self.user.id)
+            member_inventory = member_game_data['inventory']
+
+            self.max_page = 0
+
+            for inventory_page in member_inventory:
+                if inventory_page:
+                    self.max_page += 1
+                else:
+                    if self.max_page == 0: self.max_page = 1
+                    break
+
+            for child in self.children:
+                if child.label == "◀" and self.page <= 1:
+                    child.disabled = True
+                elif child.label == "▶" and self.page == self.max_page:
+                    child.disabled = True
 
         # Left Page Button
         @discord.ui.button(label="◀")
@@ -152,6 +171,12 @@ class GameBase(commands.Cog):
 
             self.page -= 1
 
+            for child in self.children:
+                child.disabled = False
+
+            if self.page <= 1:
+                button.disabled = True
+
             inventory_embed = self.game_base.generate_inventory_embed(self.user, self.page)
             await interaction.response.edit_message(embed=inventory_embed, view=self)
 
@@ -162,22 +187,17 @@ class GameBase(commands.Cog):
                 await interaction.response.send_message(content="Hey! Don't touch that!", ephemeral=True)
                 return
 
-            member_game_data = self.game_base.bot.get_user_data(self.user.id)
-            member_inventory = member_game_data['inventory']
-            max_page = 0
-
-            for inventory_page in member_inventory:
-                if inventory_page:
-                    max_page += 1
-                else:
-                    if max_page == 0: max_page = 1
-                    break
-
-            if self.page == max_page:
-                await interaction.response.send_message(content=f"Can't move past page {max_page}.", ephemeral=True)
+            if self.page == self.max_page:
+                await interaction.response.send_message(content=f"Can't move past page {self.max_page}.", ephemeral=True)
                 return
 
             self.page += 1
+
+            for child in self.children:
+                child.disabled = False
+
+            if self.page == self.max_page:
+                button.disabled = True
 
             inventory_embed = self.game_base.generate_inventory_embed(self.user, self.page)
             await interaction.response.edit_message(embed=inventory_embed, view=self)
