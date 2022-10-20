@@ -178,13 +178,6 @@ class Miscellaneous(commands.Cog):
         await context.respond(first_line + new_name + new_title)
 
     @commands.slash_command(
-        name="clam",
-        description="Clam your daily tokens!"
-    )
-    async def clam(self, context: discord.ApplicationContext):
-        await context.respond("https://cdn.discordapp.com/attachments/596391083311759412/1029178643580203089/CLAMd.png")
-
-    @commands.slash_command(
         name="flurgus",
         description="No Way."
     )

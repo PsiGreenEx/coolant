@@ -7,14 +7,14 @@ import copy
 import random
 from discord.ext import commands
 # local modules
-import coolant
+from propellant_bot import propellant
 
 
 class Games(commands.Cog):
-    def __init__(self, bot_client: coolant.CoolantBot):
+    def __init__(self, bot_client: propellant.PropellantBot):
         self.bot = bot_client
 
-        with open("./data/bot_data.json", "r") as f:
+        with open("../data/bot_data.json", "r") as f:
             bot_data = json.loads(f.read())
             self.ADMIN_LIST: list[int] = bot_data["admin_access_list"]
 
@@ -202,6 +202,13 @@ class Games(commands.Cog):
             await self.bot.log_print(f"{context.author} claimed their dailies.")
         else:
             await context.interaction.response.send_message(content="You already claimed your tokens for today.", ephemeral=True)
+
+    @commands.slash_command(
+        name="clam",
+        description="Clam your daily tokens!"
+    )
+    async def clam(self, context: discord.ApplicationContext):
+        await context.respond("https://cdn.discordapp.com/attachments/596391083311759412/1029178643580203089/CLAMd.png")
 
     # Pay
     @commands.slash_command(
