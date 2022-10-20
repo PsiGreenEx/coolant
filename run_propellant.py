@@ -4,6 +4,7 @@ import discord
 # local modules
 from propellant import PropellantBot
 from cogs_propellant.game_base import GameBase
+from cogs_propellant.gambling import Gambling
 
 if __name__ == "__main__":
     with open("./data/bot_data.json", "r") as bot_data_file:
@@ -19,5 +20,6 @@ if __name__ == "__main__":
 
     bot = PropellantBot(intents=intents, debug_guilds=debug_guilds, command_prefix=PREFIX)
 
+    bot.add_cog(Gambling(bot))
     bot.add_cog(GameBase(bot))
     bot.run(TOKEN)

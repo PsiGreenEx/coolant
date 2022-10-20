@@ -18,38 +18,12 @@ class GameBase(commands.Cog):
             bot_data = json.loads(f.read())
             self.ADMIN_LIST: list[int] = bot_data["admin_access_list"]
 
-        # Game Information (such as item data)
-        with open("./data/game_info.json", "r") as f:
-            self.GAME_INFO_DICT: dict = json.loads(f.read())
-
-        self.ITEM_INFO_DICT: dict = self.GAME_INFO_DICT['items']
-
-        # Game Data (such as players' inventories)
-        with open("./store/game_data.json", "r") as f:
-            self.game_data_dict: dict = json.loads(f.read())
-
-    # Save Game Data to JSON
-    def save_data(self):
-        with open('./store/game_data.json', 'w', encoding='utf-8') as f:
-            json.dump(self.game_data_dict, f, ensure_ascii=False, indent=2)
-
-    # Get User Data and initialize if needed
-    def get_user_data(self, user_id: int, reset=False) -> dict:
-        if str(user_id) not in self.game_data_dict or reset:
-            self.game_data_dict[str(user_id)] = copy.deepcopy(self.GAME_INFO_DICT["default_user"])
-            self.save_data()
-        return self.game_data_dict[str(user_id)]
-
-    # Update a User's Data and save
-    def update_user_data(self, user_id: int, user_game_data: dict):
-        self.game_data_dict[str(user_id)] = user_game_data
-        self.save_data()
-
+    # Functions
     # Add item to user's inventory
     def add_item_to_inventory(self, user_id: int, new_item_data: dict):
-        user_data: dict = self.get_user_data(user_id)
+        user_data: dict = self.bot.get_user_data(user_id)
         user_inventory: list[list] = user_data["inventory"]
-        new_item_info: dict = self.ITEM_INFO_DICT[new_item_data["id"]]
+        new_item_info: dict = self.bot.ITEM_INFO_DICT[new_item_data["id"]]
         item_added = False
 
         for inventory_page in user_inventory:
@@ -72,11 +46,11 @@ class GameBase(commands.Cog):
         if not item_added:
             user_inventory.append([new_item_data])
 
-        self.save_data()
+        self.bot.save_data()
 
     # remove item from user's inventory
     def remove_item_from_inventory(self, user_id: int, item_id: str, count=-1):
-        user_data: dict = self.get_user_data(user_id)
+        user_data: dict = self.bot.get_user_data(user_id)
         user_inventory: list[list] = user_data["inventory"]
 
         item_removed = False
@@ -99,11 +73,11 @@ class GameBase(commands.Cog):
 
             if item_removed: break
 
-        self.save_data()
+        self.bot.save_data()
 
     # Convert Item Information into Discord Embed Field
     def item_dict_to_embed_field(self, item: dict, embed: discord.Embed, inventory_slot: int):
-        current_item_data = self.ITEM_INFO_DICT[item['id']]
+        current_item_data = self.bot.ITEM_INFO_DICT[item['id']]
 
         if current_item_data["max_count"] == 1:
             formatted_name = f"{inventory_slot}. {current_item_data['emoji']} {current_item_data['name']}"
@@ -118,7 +92,7 @@ class GameBase(commands.Cog):
 
     # Create Embed of User's Inventory
     def generate_inventory_embed(self, member: discord.Member, page: int = 1) -> discord.Embed:
-        member_game_data = self.get_user_data(member.id)
+        member_game_data = self.bot.get_user_data(member.id)
         member_inventory: list[list] = member_game_data["inventory"]
 
         max_page = 0
@@ -149,13 +123,64 @@ class GameBase(commands.Cog):
 
     # Sell Item (assuming the item is sellable and the player has those items)
     def sell_item(self, user_id: int, inventory_slot: int, count: int):
-        user_game_data = self.get_user_data(user_id)
+        user_game_data = self.bot.get_user_data(user_id)
 
         item_data: dict = user_game_data['inventory'][inventory_slot // 10][inventory_slot-1]
-        item_info: dict = self.ITEM_INFO_DICT[item_data['id']]
+        item_info: dict = self.bot.ITEM_INFO_DICT[item_data['id']]
 
         user_game_data['tokens'] += item_info['value'] * count
         self.remove_item_from_inventory(user_id, item_data['id'], count)
+
+    # Views and Other Classes
+    # Inventory Page Buttons
+    class InventoryView(discord.ui.View):
+        def __init__(self, game_base, user: discord.Member, page: int,  *items: discord.ui.Item):
+            super().__init__(*items)
+            self.game_base: GameBase = game_base
+            self.user = user
+            self.page = page
+
+        # Left Page Button
+        @discord.ui.button(label="◀")
+        async def left_callback(self, button: discord.Button, interaction: discord.Interaction):
+            if interaction.message.interaction.user != interaction.user:
+                await interaction.response.send_message(content="Hey! Don't touch that!", ephemeral=True)
+                return
+            if self.page <= 1:
+                await interaction.response.send_message(content="Can't move before page 1.", ephemeral=True)
+                return
+
+            self.page -= 1
+
+            inventory_embed = self.game_base.generate_inventory_embed(self.user, self.page)
+            await interaction.response.edit_message(embed=inventory_embed, view=self)
+
+        # Right Page Button
+        @discord.ui.button(label="▶")
+        async def right_callback(self, button: discord.Button, interaction: discord.Interaction):
+            if interaction.message.interaction.user != interaction.user:
+                await interaction.response.send_message(content="Hey! Don't touch that!", ephemeral=True)
+                return
+
+            member_game_data = self.game_base.bot.get_user_data(self.user.id)
+            member_inventory = member_game_data['inventory']
+            max_page = 0
+
+            for inventory_page in member_inventory:
+                if inventory_page:
+                    max_page += 1
+                else:
+                    if max_page == 0: max_page = 1
+                    break
+
+            if self.page == max_page:
+                await interaction.response.send_message(content=f"Can't move past page {max_page}.", ephemeral=True)
+                return
+
+            self.page += 1
+
+            inventory_embed = self.game_base.generate_inventory_embed(self.user, self.page)
+            await interaction.response.edit_message(embed=inventory_embed, view=self)
 
     # Commands
     # Inventory
@@ -169,16 +194,22 @@ class GameBase(commands.Cog):
                 description="The page number of your inventory.",
                 min_value=1,
                 default=1
+            ),
+            discord.Option(
+                discord.Member or None,
+                name="user",
+                description="The user whose inventory you want to check.",
+                default=None
             )
         ]
     )
-    async def inventory(self, context: discord.ApplicationContext, page):
-        author = context.author
+    async def inventory(self, context: discord.ApplicationContext, page: int, user: discord.Member or None):
+        if user is None:
+            user = context.author
 
-        inventory_embed = self.generate_inventory_embed(author, page)
+        inventory_embed = self.generate_inventory_embed(user, page)
 
-        await context.respond(embed=inventory_embed)
-        await self.bot.log_print(f"{author} checked their inventory.")
+        await context.respond(embed=inventory_embed, view=self.InventoryView(self, user, page))
 
     # Daily Claim
     @commands.slash_command(
@@ -186,7 +217,7 @@ class GameBase(commands.Cog):
         description="Claim your daily tokens!"
     )
     async def daily(self, context: discord.ApplicationContext):
-        member_game_data = self.get_user_data(context.author.id)
+        member_game_data = self.bot.get_user_data(context.author.id)
         if date.fromisoformat(member_game_data['daily']['when_last_claimed']) < date.today():
             member_game_data['tokens'] += member_game_data['daily']['tokens_per_claim']
             message = f"You claimed {member_game_data['daily']['tokens_per_claim']:,} AlloyTokens. Your total is {member_game_data['tokens']:,} :coin:."
@@ -197,12 +228,13 @@ class GameBase(commands.Cog):
                            f"Your total is {member_game_data['shinies']:,} ✨."
 
             member_game_data['daily']['when_last_claimed'] = date.today().isoformat()
-            self.update_user_data(context.author.id, member_game_data)
+
             await context.respond(message)
             await self.bot.log_print(f"{context.author} claimed their dailies.")
         else:
             await context.interaction.response.send_message(content="You already claimed your tokens for today.", ephemeral=True)
 
+    # Clam Tomfoolery
     @commands.slash_command(
         name="clam",
         description="Clam your daily tokens!"
@@ -244,8 +276,8 @@ class GameBase(commands.Cog):
         ]
     )
     async def pay(self, context: discord.ApplicationContext, user: discord.Member, amount: int, currency: int):
-        payer_game_data: dict = self.get_user_data(context.author.id)
-        payee_game_data: dict = self.get_user_data(user.id)
+        payer_game_data: dict = self.bot.get_user_data(context.author.id)
+        payee_game_data: dict = self.bot.get_user_data(user.id)
 
         if amount <= 0:
             await context.interaction.response.send_message("Amount needs to be above 0.", ephemeral=True)
@@ -270,102 +302,7 @@ class GameBase(commands.Cog):
                 payee_game_data["shinies"] += amount
                 await context.respond(f"Paid {user.mention} {amount} ✨.")
 
-        self.save_data()
-
-    # Spin the Slots
-    @commands.slash_command(
-        name="slots",
-        description="Try your luck with the slot machine!",
-        options=[
-            discord.Option(
-                int,
-                name="bet",
-                description="Number of tokens to bet. Min bet is 10. Max bet is 2,000.",
-                min_value=10,
-                max_value=2000
-            )
-        ]
-    )
-    async def spin_slots(self, context: discord.ApplicationContext, bet: int):
-        slot_symbols: dict = {
-            "grapes": "🍇",
-            "cherry": "🍒",
-            "orange": "🍊",
-            "watermelon": "🍉",
-            "lemon": "🍋",
-            "blueberries": "🫐",
-            "peach": "🍑",
-            "bell": "🔔",
-            "diamond": "💎",
-            "jackpot": "<:23:1029169299526529024>"
-        }
-
-        member_game_data = self.get_user_data(context.author.id)
-
-        if bet > member_game_data["tokens"]:
-            await context.interaction.response.send_message(content="Insufficient tokens!", ephemeral=True)
-            return
-
-        member_game_data["tokens"] -= bet
-
-        payout = 0
-        jackpot = False
-
-        symbol_one = random.choice(list(slot_symbols.keys()))
-        symbol_two = random.choice(list(slot_symbols.keys()))
-        symbol_three = random.choice(list(slot_symbols.keys()))
-
-        await context.respond(f"**Bet is:** {bet}\n"
-                              f"** <a:loading:1029896164981604423> Spinning:** \n"
-                              f"❔ ❔ ❔")
-
-        await asyncio.sleep(1)
-        await context.edit(content=f"**Bet is:** {bet}\n"
-                                   f"** <a:loading:1029896164981604423> Spinning:** \n"
-                                   f"{slot_symbols[symbol_one]} ❔ ❔")
-        await asyncio.sleep(1)
-        await context.edit(content=f"**Bet is:** {bet}\n"
-                                   f"** <a:loading:1029896164981604423> Spinning:** \n"
-                                   f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} ❔")
-        await asyncio.sleep(1)
-        await context.edit(content=f"**Bet is:** {bet}\n"
-                                   f"**Finished!** \n"
-                                   f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}")
-        message = f"**Bet is:** {bet}\n" \
-                  f"**Finished!** \n" \
-                  f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}\n\n"
-
-        # Calculate Payout
-        if symbol_one == symbol_two == symbol_three:  # if a match 3
-            if symbol_one in ("grapes", "cherry", "orange", "watermelon", "lemon", "blueberries", "peach"):  # fruit payout
-                payout = bet * 4
-                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
-                           f"**Payout:** {payout} :coin: ({bet}×4)"
-            elif symbol_one == "bell":  # bell payout
-                payout = bet * 5
-                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
-                           f"**Payout:** {payout} :coin: ({bet}×5)"
-            elif symbol_one == "diamond":  # diamond payout
-                payout = bet * 6
-                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
-                           f"**Payout:** {payout} :coin: ({bet}×6)"
-            elif symbol_one == "jackpot":  # jackpot payout
-                payout = bet * 23
-                message += f"**JACKPOT!!!**\n" \
-                           f"**Payout:** {payout} :coin: ({bet}×23) and a ✨Shiny✨!"
-                jackpot = True
-        elif all(i in ("grapes", "cherry", "orange", "watermelon", "lemon", "blueberries", "peach") for i in (symbol_one, symbol_two, symbol_three)):  # if a fruit match
-            payout = round(bet * 1.5)
-            message += f"**Triple Fruit!**\n" \
-                       f"**Payout:** {payout} :coin: ({bet}×1.5)"
-        else:
-            message += "Better luck next time!"
-
-        member_game_data["tokens"] += payout
-        if jackpot: member_game_data["shinies"] += 1
-        self.save_data()
-        await asyncio.sleep(1)
-        await context.edit(content=message)
+        self.bot.save_data()
 
     # Class for the Valuate Command View
     class ValuateView(discord.ui.View):
@@ -428,7 +365,7 @@ class GameBase(commands.Cog):
         ]
     )
     async def valuate(self, context: discord.ApplicationContext, inventory_slot: int, amount: int, quick_sell: bool):
-        member_game_data = self.get_user_data(context.author.id)
+        member_game_data = self.bot.get_user_data(context.author.id)
 
         inventory_page = inventory_slot // 10
 
@@ -438,7 +375,7 @@ class GameBase(commands.Cog):
             await context.interaction.response.send_message(content="That inventory slot is empty.", ephemeral=True)
             return
 
-        selected_item_info = self.ITEM_INFO_DICT[selected_item["id"]]
+        selected_item_info = self.bot.ITEM_INFO_DICT[selected_item["id"]]
 
         if not selected_item_info["sellable"]:  # if item is unsellable
             await context.interaction.response.send_message(content="This item is unsellable.", ephemeral=True)
@@ -566,7 +503,7 @@ class GameBase(commands.Cog):
             await context.interaction.response.send_message("Improper perms!", ephemeral=True)
             return
 
-        member_game_data: dict = self.get_user_data(user.id)
+        member_game_data: dict = self.bot.get_user_data(user.id)
         if currency == "tokens":
             member_game_data["tokens"] = max(0, member_game_data["tokens"] + amount)
             await context.interaction.response.send_message(f"Gave {user.display_name} {amount} :coin:.", ephemeral=True)
