@@ -6,7 +6,7 @@ from propellant import PropellantBot
 from cogs_propellant.game_base import GameBase
 
 if __name__ == "__main__":
-    with open("data/bot_data.json", "r") as bot_data_file:
+    with open("./data/bot_data.json", "r") as bot_data_file:
         bot_data: dict = json.loads(bot_data_file.read())
         TOKEN: str = bot_data["propellant_token"]
         MEMBER_ROLE_ID: int = bot_data["member_role_id"]

@@ -14,7 +14,7 @@ class GameBase(commands.Cog):
     def __init__(self, bot_client: propellant.PropellantBot):
         self.bot = bot_client
 
-        with open("../data/bot_data.json", "r") as f:
+        with open("./data/bot_data.json", "r") as f:
             bot_data = json.loads(f.read())
             self.ADMIN_LIST: list[int] = bot_data["admin_access_list"]
 
