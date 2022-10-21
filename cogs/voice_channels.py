@@ -1,4 +1,5 @@
 # voice_channels.py
+import copy
 import json
 import discord
 from discord.ext import commands
@@ -9,7 +10,7 @@ import coolant
 class VoiceChannels(commands.Cog):
     def __init__(self, bot_client: coolant.CoolantBot):
         self.bot = bot_client
-        self.channel_list = []
+        self.channel_list: list[discord.abc.GuildChannel] = []
 
         with open("./data/bot_data.json", 'r') as f:
             bot_data = json.loads(f.read())
@@ -18,6 +19,23 @@ class VoiceChannels(commands.Cog):
 
         with open("./store/vc_preferences.json", "r") as f:
             self.vc_preferences = json.loads(f.read())
+
+        with open("./store/leftover_vcs.json", "r") as f:
+            self.leftover_vcs: list = json.loads(f.read())
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        leftover_vcs_iterator = copy.deepcopy(self.leftover_vcs)
+        for vc_id in leftover_vcs_iterator:
+            voice_channel = self.bot.get_channel(vc_id)
+            self.channel_list.append(voice_channel)
+            self.leftover_vcs.remove(vc_id)
+            if len(voice_channel.members) == 0:
+                await self.bot.log_print(f"Deleted leftover voice channel \"{voice_channel.name}\".")
+                await voice_channel.delete()
+
+        with open("./store/leftover_vcs.json", "w") as f:
+            json.dump(list(map(lambda x: x.id, self.channel_list)), f, ensure_ascii=False, indent=2)
 
     @commands.slash_command(
         name="vcpref",
@@ -63,7 +81,7 @@ class VoiceChannels(commands.Cog):
 
     # Creates temporary voice channel on join of "creation channel"
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member: discord.Member, before, after):
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
         if after.channel is not None:
             if after.channel.id == self.create_channel_id:
                 channel: discord.VoiceChannel = after.channel
@@ -88,11 +106,19 @@ class VoiceChannels(commands.Cog):
                                                                category=channel.category, user_limit=user_limit)
                 self.channel_list.append(new_channel)
 
+                with open("./store/leftover_vcs.json", "w") as f:
+                    json.dump(list(map(lambda x: x.id, self.channel_list)), f, ensure_ascii=False, indent=2)
+
                 await self.bot.log_print(f"Created voice channel \"{channel_name}\".")
                 await member.move_to(new_channel)
+
         if before.channel in self.channel_list:
             if len(before.channel.members) == 0:
                 await self.bot.log_print(f"Deleted voice channel \"{before.channel.name}\".")
 
                 self.channel_list.remove(before.channel)
+
+                with open("./store/leftover_vcs.json", "w") as f:
+                    json.dump(list(map(lambda x: x.id, self.channel_list)), f, ensure_ascii=False, indent=2)
+
                 await before.channel.delete()
