@@ -10,8 +10,8 @@ from enum import Enum
 
 
 class Emojis:
-    TOKEN = "<:token:1032779021659951146>"
-    SHINY = "<:shiny:1032779020615553075>"
+    TOKEN = "<:token:1033006886968111147>"
+    SHINY = "<:shiny:1033007242112401419>"
 
 
 class PropellantBot(commands.Bot, ABC):
