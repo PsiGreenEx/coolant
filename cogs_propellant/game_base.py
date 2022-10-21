@@ -465,6 +465,8 @@ class GameBase(commands.Cog):
 
             await context.respond(message)
             await self.bot.log_print(f"{context.author} claimed their dailies.")
+
+            self.bot.save_data()
         else:
             await context.interaction.response.send_message(content="You already claimed your tokens for today.",
                                                             ephemeral=True)
