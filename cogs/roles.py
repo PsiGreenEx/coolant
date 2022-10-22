@@ -151,7 +151,7 @@ class Roles(commands.Cog):
         ]
     )
     async def change_role_color(self, context: discord.ApplicationContext, hex_string: str or None, color_name: str or None):
-        if color_name.title() in self.COLORS.keys():
+        if color_name and color_name.title() in self.COLORS.keys():
             hex_color = int(self.COLORS[color_name.title()], 16)
         elif hex_string is None:
             hex_color = random.randint(0, 0xFFFFFF)
