@@ -1,5 +1,4 @@
 # game_base.py
-import asyncio
 import json
 import discord
 from datetime import date
@@ -458,7 +457,8 @@ class GameBase(commands.Cog):
 
             if random.random() <= member_game_data['daily']['shiny_chance']:
                 member_game_data['shinies'] += member_game_data['daily']['shinies_per_claim']
-                message += f"\nWow! You found {member_game_data['daily']['shinies_per_claim']:,} {Emojis.SHINY}Shin{'y' if member_game_data['daily']['shinies_per_claim'] == 1 else 'ies'}{Emojis.SHINY}! " \
+                message += f"\nWow! You found {member_game_data['daily']['shinies_per_claim']:,} " \
+                           f"{Emojis.SHINY}Shin{'y' if member_game_data['daily']['shinies_per_claim'] == 1 else 'ies'}{Emojis.SHINY}! " \
                            f"Your total is {member_game_data['shinies']:,} {Emojis.SHINY}."
 
             member_game_data['daily']['when_last_claimed'] = date.today().isoformat()
@@ -468,8 +468,7 @@ class GameBase(commands.Cog):
 
             self.bot.save_data()
         else:
-            await context.interaction.response.send_message(content="You already claimed your tokens for today.",
-                                                            ephemeral=True)
+            await context.interaction.response.send_message(content="You already claimed your tokens for today.", ephemeral=True)
 
     # Clam Tomfoolery
     @commands.slash_command(

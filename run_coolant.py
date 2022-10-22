@@ -8,6 +8,7 @@ from cogs.admin import Admin
 from cogs.misc import Miscellaneous
 from cogs.jarvis import Jarvis
 from cogs.voice_channels import VoiceChannels
+from cogs.roles import Roles
 
 if __name__ == "__main__":
     with open("data/bot_data.json", "r") as bot_data_file:
@@ -32,4 +33,5 @@ if __name__ == "__main__":
     bot.add_cog(Miscellaneous(bot))
     bot.add_cog(Jarvis(bot, jarvis))
     bot.add_cog(VoiceChannels(bot))
+    bot.add_cog(Roles(bot))
     bot.run(TOKEN)

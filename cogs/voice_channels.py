@@ -28,6 +28,9 @@ class VoiceChannels(commands.Cog):
         leftover_vcs_iterator = copy.deepcopy(self.leftover_vcs)
         for vc_id in leftover_vcs_iterator:
             voice_channel = self.bot.get_channel(vc_id)
+            if voice_channel is None:
+                self.leftover_vcs.remove(vc_id)
+                continue
             self.channel_list.append(voice_channel)
             self.leftover_vcs.remove(vc_id)
             if len(voice_channel.members) == 0:
