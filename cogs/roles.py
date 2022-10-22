@@ -24,13 +24,17 @@ class Roles(commands.Cog):
     # roles subcommand group
     roles_group = discord.SlashCommandGroup("role", "Modify your coolant role.")
 
-    @commands.Cog.listener()
+    @commands.Cog.listener("on_ready")
     async def on_ready(self):
         for guild in self.bot.guilds:
             for member in guild.members:
                 await self.update_role(member, save=False)
 
         self.save_role_data()
+
+    @commands.Cog.listener("on_member_joined")
+    async def on_member_joined(self, member: discord.Member):
+        await self.update_role(member)
 
     def save_role_data(self):
         with open("./store/roles.json", "w") as f:
@@ -57,6 +61,8 @@ class Roles(commands.Cog):
 
             await self.bot.log_print(f"New role {user_role.name} created!")
             await user.add_roles(user_role)
+        elif user.get_role(self.roles[str(user.id)]['role_id']) is None:
+            await user.add_roles(user.guild.get_role(self.roles[str(user.id)]['role_id']))
         else:
             user_role = user.get_role(self.roles[str(user.id)]['role_id'])
             if name:
@@ -65,11 +71,6 @@ class Roles(commands.Cog):
                 await user_role.edit(color=color)
 
         if save: self.save_role_data()
-
-    def int_into_color_hex(self, color: int) -> str:
-        hex_color = hex(color).lstrip('0x')
-        hex_color = hex_color.zfill(len(hex_color)-6)
-        return hex_color
 
     # Commands
     @roles_group.command(
@@ -136,27 +137,19 @@ class Roles(commands.Cog):
         options=[
             discord.Option(
                 str or None,
-                name="hex",
-                description="The hex code of the color. Default is random.",
-                default=None,
-                min_length=6,
-                max_length=6
-            ),
-            discord.Option(
-                str or None,
-                name="colorname",
-                description="The name of the color. If the name is not a color name, it will be random.",
+                name="color",
+                description="The hex code of the color OR the name of the color. Default is random.",
                 default=None
             )
         ]
     )
-    async def change_role_color(self, context: discord.ApplicationContext, hex_string: str or None, color_name: str or None):
-        if color_name and color_name.title() in self.COLORS.keys():
-            hex_color = int(self.COLORS[color_name.title()], 16)
-        elif hex_string is None:
+    async def change_role_color(self, context: discord.ApplicationContext, color_input: str or None):
+        if color_input and color_input.title() in self.COLORS.keys():
+            hex_color = int(self.COLORS[color_input.title()], 16)
+        elif color_input is None:
             hex_color = random.randint(0, 0xFFFFFF)
         else:
-            hex_color = int(hex_string.strip('#'), 16)
+            hex_color = int(color_input.lstrip('#'), 16)
 
         if 0 <= hex_color >= 0xFFFFFF:
             await context.response.send_message(content="Invalid hex code!", ephemeral=True)
