@@ -19,9 +19,9 @@ class Gambling(commands.Cog):
             discord.Option(
                 int,
                 name="bet",
-                description="Number of tokens to bet. Min bet is 10. Max bet is 2,000.",
+                description="Number of tokens to bet. Min bet is 10. Max bet is 20,000.",
                 min_value=10,
-                max_value=2000
+                max_value=20000
             )
         ]
     )
@@ -39,6 +39,33 @@ class Gambling(commands.Cog):
             "jackpot": "<:23:1029169299526529024>"
         }
 
+        fruits: list[str] = ["🍇", "🍒", "🍊", "🍉", "🍋", "🫐", "🍑"]
+
+        outcome_chances: dict = {
+            "any fruit": 0.3,
+            "triple fruit": 0.13,
+            "bell": 0.06,
+            "diamond": 0.01,
+            "jackpot": 0.001
+        }
+
+        scaled_outcome_chances: dict = {
+            "jackpot": (0, outcome_chances['jackpot']),
+            "diamond": (outcome_chances['jackpot'], outcome_chances['jackpot']+outcome_chances['diamond']),
+            "bell":  (outcome_chances['jackpot']+outcome_chances['diamond'], outcome_chances['jackpot']+outcome_chances['diamond']+outcome_chances['bell']),
+            "triple fruit": (outcome_chances['jackpot']+outcome_chances['diamond']+outcome_chances['bell'],
+                             outcome_chances['jackpot']+outcome_chances['diamond']+outcome_chances['bell']+outcome_chances['triple fruit']),
+            "any fruit": (outcome_chances['jackpot']+outcome_chances['diamond']+outcome_chances['bell']+outcome_chances['triple fruit'],
+                          outcome_chances['jackpot']+outcome_chances['diamond']+outcome_chances['bell']+outcome_chances['triple fruit']+outcome_chances['any fruit'])
+        }
+
+        outcome_random_value = random.random()
+        outcome = "none"
+
+        for outcome_string, chance_range in scaled_outcome_chances.items():
+            if chance_range[0] <= outcome_random_value >= chance_range[1]:
+                outcome = outcome_string
+
         member_game_data = self.bot.get_user_data(context.author.id)
 
         if bet > member_game_data["tokens"]:
@@ -49,55 +76,79 @@ class Gambling(commands.Cog):
         payout = 0
         jackpot = False
 
-        symbol_one = random.choice(list(slot_symbols.keys()))
-        symbol_two = random.choice(list(slot_symbols.keys()))
-        symbol_three = random.choice(list(slot_symbols.keys()))
+        slots: list[str] = ["", "", ""]
 
+        if outcome == "any fruit":
+            while True:
+                slots[0] = random.choice(fruits)
+                slots[1] = random.choice(fruits)
+                slots[2] = random.choice(fruits)
+                if not (slots[0] == slots[1] == slots[2]): break
+
+            payout = round(bet * 1.5)
+
+            payout_message = f"**Triple Fruit!**\n" \
+                             f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×1.5)"
+        elif outcome == "triple fruit":
+            tripled_fruit = random.choice(fruits)
+            slots[0] = tripled_fruit
+            slots[1] = tripled_fruit
+            slots[2] = tripled_fruit
+
+            payout = bet * 4
+
+            payout_message = f"**Triple {slots[0]}!**\n" \
+                             f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×4)"
+        elif outcome == "none":
+            while not (slots[0] == slots[1] == slots[2]) and not all(i in fruits for i in slots):
+                slots[0] = random.choice(list(slot_symbols.values()))
+                slots[1] = random.choice(list(slot_symbols.values()))
+                slots[2] = random.choice(list(slot_symbols.values()))
+
+            payout_message = "Better luck next time!"
+        else:
+            slots[0] = slot_symbols[outcome]
+            slots[1] = slot_symbols[outcome]
+            slots[2] = slot_symbols[outcome]
+
+            if outcome == "bell":
+                payout = bet * 5
+
+                payout_message = f"**Triple {slots[0]}!**\n" \
+                                 f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×5)"
+            elif outcome == "diamond":
+                payout = bet * 10
+
+                payout_message = f"**Triple {slots[0]}!**\n" \
+                                 f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×10)"
+            elif outcome == "jackpot":
+                payout = bet * 4
+                jackpot = True
+
+                payout_message = f"**Jackpot!**\n" \
+                                 f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×23) and a {Emojis.SHINY}Shiny{Emojis.SHINY}!"
+            else:
+                payout_message = "<:realer:883844085805350932> (tell psi about this something is BROKE)"
+
+        # Spinning
         await context.respond(f"**Bet is:** {bet} {Emojis.TOKEN}\n"
                               f"** <a:loading:1029896164981604423> Spinning:** \n"
                               f"❔ ❔ ❔")
         await asyncio.sleep(1)
         await context.edit(content=f"**Bet is:** {bet} {Emojis.TOKEN}\n"
                                    f"** <a:loading:1029896164981604423> Spinning:** \n"
-                                   f"{slot_symbols[symbol_one]} ❔ ❔")
+                                   f"{slots[0]} ❔ ❔")
         await asyncio.sleep(1)
         await context.edit(content=f"**Bet is:** {bet} {Emojis.TOKEN}\n"
                                    f"** <a:loading:1029896164981604423> Spinning:** \n"
-                                   f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} ❔")
+                                   f"{slots[0]} {slots[1]} ❔")
         await asyncio.sleep(1)
-        await context.edit(content=f"**Bet is:** {bet} {Emojis.TOKEN}\n"
-                                   f"**Finished!** \n"
-                                   f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}")
         message = f"**Bet is:** {bet} {Emojis.TOKEN}\n" \
                   f"**Finished!** \n" \
-                  f"{slot_symbols[symbol_one]} {slot_symbols[symbol_two]} {slot_symbols[symbol_three]}\n\n"
+                  f"{slots[0]} {slots[1]} {slots[2]}\n\n"
+        await context.edit(content=message)
 
-        # Calculate Payout
-        if symbol_one == symbol_two == symbol_three:  # if a match 3
-            if symbol_one in ("grapes", "cherry", "orange", "watermelon", "lemon", "blueberries", "peach"):  # fruit payout
-                payout = bet * 4
-                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
-                           f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×4)"
-            elif symbol_one == "bell":  # bell payout
-                payout = bet * 5
-                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
-                           f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×5)"
-            elif symbol_one == "diamond":  # diamond payout
-                payout = bet * 6
-                message += f"**Triple {slot_symbols[symbol_one]}!**\n" \
-                           f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×6)"
-            elif symbol_one == "jackpot":  # jackpot payout
-                payout = bet * 23
-                message += f"**JACKPOT!!!**\n" \
-                           f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×23) and a {Emojis.SHINY}Shiny{Emojis.SHINY}!"
-                jackpot = True
-        elif all(i in ("grapes", "cherry", "orange", "watermelon", "lemon", "blueberries", "peach") for i in
-                 (symbol_one, symbol_two, symbol_three)):  # if a fruit match
-            payout = round(bet * 1.5)
-            message += f"**Triple Fruit!**\n" \
-                       f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×1.5)"
-        else:
-            message += "Better luck next time!"
+        message += payout_message
 
         member_game_data["tokens"] += payout
         if jackpot: member_game_data["shinies"] += 1

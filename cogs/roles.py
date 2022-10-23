@@ -61,7 +61,7 @@ class Roles(commands.Cog):
 
             await self.bot.log_print(f"New role {user_role.name} created!")
             await user.add_roles(user_role)
-        elif user.get_role(self.roles[str(user.id)]['role_id']) is None:
+        elif user.get_role(self.roles[str(user.id)]['role_id']) is not None:
             await user.add_roles(user.guild.get_role(self.roles[str(user.id)]['role_id']))
         else:
             user_role = user.get_role(self.roles[str(user.id)]['role_id'])
@@ -103,7 +103,7 @@ class Roles(commands.Cog):
         @discord.ui.button(
             label="Randomize"
         )
-        async def shuffle_callback(self, button: discord.Button, interaction: discord.Interaction):
+        async def shuffle_callback(self, _button: discord.Button, interaction: discord.Interaction):
             self.color = random.randint(0, 0xFFFFFF)
 
             self.embed = discord.Embed(
@@ -121,7 +121,7 @@ class Roles(commands.Cog):
             label="Accept",
             style=discord.ButtonStyle.green
         )
-        async def accept_callback(self, button: discord.Button, interaction: discord.Interaction):
+        async def accept_callback(self, _button: discord.Button, interaction: discord.Interaction):
             await self.role.edit(color=self.color)
             self.embed.title = "Accepted"
 

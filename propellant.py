@@ -44,10 +44,10 @@ class PropellantBot(commands.Bot, ABC):
 
     # Get User Data and initialize if needed
     def get_user_data(self, user_id: int, reset=False) -> dict:
-        if str(user_id) not in self.game_data_dict or reset:
-            self.game_data_dict[str(user_id)] = copy.deepcopy(self.GAME_INFO_DICT["default_user"])
+        if str(user_id) not in self.game_data_dict['users'] or reset:
+            self.game_data_dict['users'][str(user_id)] = copy.deepcopy(self.GAME_INFO_DICT["default_user"])
             self.save_data()
-        return self.game_data_dict[str(user_id)]
+        return self.game_data_dict['users'][str(user_id)]
 
     async def on_ready(self):
         await self.log_print(f'{self.user} has connected to Discord!')

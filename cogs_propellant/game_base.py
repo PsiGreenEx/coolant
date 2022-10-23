@@ -388,13 +388,13 @@ class GameBase(commands.Cog):
             "Slots": discord.EmbedField(
                 name="Slots",
                 value="🍇 🍒 🍊 🍉 🍋 🫐 🍑 🔔 💎 <:23:1029169299526529024>\n"
-                      "The payouts are as follows:\n\n"
-                      "Any Three Fruits: x1.5\n"
-                      "Three Matching Fruits: 4x\n"
-                      "Three Bells: 5x\n"
-                      "Three Diamonds: 6x\n"
-                      "Three <:23:1029169299526529024>s (jackpot): 23x\n\n"
-                      "~34% chance to make any match. 0.1% chance to hit jackpot."
+                      "**The payouts are as follows:**\n\n"
+                      "Any Three Fruits: ×1.5 (30%)\n"
+                      "Three Matching Fruits: ×4 (13%)\n"
+                      "Three Bells: ×5 (6%)\n"
+                      "Three Diamonds: ×10 (1%)\n"
+                      "Three <:23:1029169299526529024>s (jackpot): ×23 (0.1%)\n"
+                      "Total chance of winning: 50.1%"
             ),
             "Trade": discord.EmbedField(
                 name="Trade",
