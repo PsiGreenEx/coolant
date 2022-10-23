@@ -100,10 +100,17 @@ class Gambling(commands.Cog):
             payout_message = f"**Triple {slots[0]}!**\n" \
                              f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×4)"
         elif outcome == "none":
-            while not (slots[0] == slots[1] == slots[2]) and not all(i in fruits for i in slots):
-                slots[0] = random.choice(list(slot_symbols.values()))
-                slots[1] = random.choice(list(slot_symbols.values()))
+            while True:
+                if random.random() >= 0.33:
+                    teaser_symbol = random.choice(list(slot_symbols.values()))  # i am pure evil
+                    slots[0] = teaser_symbol
+                    slots[1] = teaser_symbol
+                else:
+                    slots[0] = random.choice(list(slot_symbols.values()))
+                    slots[1] = random.choice(list(slot_symbols.values()))
+
                 slots[2] = random.choice(list(slot_symbols.values()))
+                if not (slots[0] == slots[1] == slots[2]) and not all(i in fruits for i in slots): break
 
             payout_message = "Better luck next time!"
         else:
@@ -126,7 +133,7 @@ class Gambling(commands.Cog):
                 jackpot = True
 
                 payout_message = f"**Jackpot!**\n" \
-                                 f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×23) and a {Emojis.SHINY}Shiny{Emojis.SHINY}!"
+                                 f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×23) and 5 {Emojis.SHINY}Shinies{Emojis.SHINY}!"
             else:
                 payout_message = "<:realer:883844085805350932> (tell psi about this something is BROKE)"
 
@@ -151,7 +158,7 @@ class Gambling(commands.Cog):
         message += payout_message
 
         member_game_data["tokens"] += payout
-        if jackpot: member_game_data["shinies"] += 1
+        if jackpot: member_game_data["shinies"] += 5
 
         self.bot.save_data()
         await asyncio.sleep(1)
