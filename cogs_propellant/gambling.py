@@ -19,9 +19,9 @@ class Gambling(commands.Cog):
             discord.Option(
                 int,
                 name="bet",
-                description="Number of tokens to bet. Min bet is 10. Max bet is 20,000.",
+                description="Number of tokens to bet. Min bet is 10. Max bet is 3,000.",
                 min_value=10,
-                max_value=20000
+                max_value=3000
             )
         ]
     )
@@ -63,7 +63,7 @@ class Gambling(commands.Cog):
         outcome = "none"
 
         for outcome_string, chance_range in scaled_outcome_chances.items():
-            if chance_range[0] <= outcome_random_value >= chance_range[1]:
+            if chance_range[0] < outcome_random_value <= chance_range[1]:
                 outcome = outcome_string
 
         member_game_data = self.bot.get_user_data(context.author.id)
@@ -85,20 +85,20 @@ class Gambling(commands.Cog):
                 slots[2] = random.choice(fruits)
                 if not (slots[0] == slots[1] == slots[2]): break
 
-            payout = round(bet * 1.5)
+            payout = round(bet * 1.3)
 
             payout_message = f"**Triple Fruit!**\n" \
-                             f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×1.5)"
+                             f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×1.3)"
         elif outcome == "triple fruit":
             tripled_fruit = random.choice(fruits)
             slots[0] = tripled_fruit
             slots[1] = tripled_fruit
             slots[2] = tripled_fruit
 
-            payout = bet * 4
+            payout = bet * 2
 
             payout_message = f"**Triple {slots[0]}!**\n" \
-                             f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×4)"
+                             f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×2)"
         elif outcome == "none":
             while True:
                 if random.random() >= 0.33:
@@ -119,17 +119,17 @@ class Gambling(commands.Cog):
             slots[2] = slot_symbols[outcome]
 
             if outcome == "bell":
-                payout = bet * 5
-
-                payout_message = f"**Triple {slots[0]}!**\n" \
-                                 f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×5)"
-            elif outcome == "diamond":
-                payout = bet * 10
-
-                payout_message = f"**Triple {slots[0]}!**\n" \
-                                 f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×10)"
-            elif outcome == "jackpot":
                 payout = bet * 4
+
+                payout_message = f"**Triple {slots[0]}!**\n" \
+                                 f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×4)"
+            elif outcome == "diamond":
+                payout = bet * 8
+
+                payout_message = f"**Triple {slots[0]}!**\n" \
+                                 f"**Payout:** {payout} {Emojis.TOKEN} ({bet}×8)"
+            elif outcome == "jackpot":
+                payout = bet * 23
                 jackpot = True
 
                 payout_message = f"**Jackpot!**\n" \
