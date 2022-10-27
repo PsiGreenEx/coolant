@@ -34,12 +34,13 @@ class Gambling(commands.Cog):
             "lemon": "🍋",
             "blueberries": "🫐",
             "peach": "🍑",
+            "eggplant": "🍆",
             "bell": "🔔",
             "diamond": "💎",
             "jackpot": "<:23:1029169299526529024>"
         }
 
-        fruits: list[str] = ["🍇", "🍒", "🍊", "🍉", "🍋", "🫐", "🍑"]
+        fruits: list[str] = ["🍇", "🍒", "🍊", "🍉", "🍋", "🫐", "🍑", "🍆"]
 
         outcome_chances: dict = {
             "any fruit": 0.3,
