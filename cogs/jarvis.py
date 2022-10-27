@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands, tasks
 # local modules
 import coolant
-from jarvis_processor import JarvisProcessor
+from processors.jarvis import JarvisProcessor
 
 
 class Jarvis(commands.Cog):

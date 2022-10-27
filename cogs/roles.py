@@ -5,18 +5,15 @@ import random
 from discord.ext import commands
 import discord
 # local modules
-import coolant
+from coolant import CoolantBot, load_role_data, save_role_data
 
 
 class Roles(commands.Cog):
-    def __init__(self, bot_client: coolant.CoolantBot):
+    def __init__(self, bot_client: CoolantBot):
         self.bot = bot_client
 
         with open("./data/bot_data.json", "r") as f:
             self.BOT_ROLE_ID: int = json.loads(f.read())['bot_role_id']
-
-        with open("./store/roles.json", "r") as f:
-            self.roles: dict = json.loads(f.read())
 
         with open("./data/colors.json", "r") as f:
             self.COLORS: dict = json.loads(f.read())
@@ -26,25 +23,26 @@ class Roles(commands.Cog):
 
     @commands.Cog.listener("on_ready")
     async def on_ready(self):
+        roles = load_role_data()
+
         for guild in self.bot.guilds:
             for member in guild.members:
-                await self.update_role(member, save=False)
+                await self.update_role(member, save=False, roles_data=roles)
 
-        self.save_role_data()
+        save_role_data(roles)
 
     @commands.Cog.listener("on_member_joined")
     async def on_member_joined(self, member: discord.Member):
         await self.update_role(member)
 
-    def save_role_data(self):
-        with open("./store/roles.json", "w") as f:
-            json.dump(self.roles, f, ensure_ascii=False, indent=2)
-
-    async def update_role(self, user: discord.Member, name: str or None = None, color: int or None = None, save: bool = True):
+    async def update_role(self, user: discord.Member, name: str or None = None, color: int or None = None, save: bool = True, roles_data: dict or None = None):
         if user.bot:
             return
 
-        if str(user.id) not in self.roles.keys():
+        if roles_data is None:
+            roles_data = load_role_data()
+
+        if str(user.id) not in roles_data.keys():
             user_role = await user.guild.create_role(
                 name=name if name is not None else user.name
             )
@@ -54,23 +52,24 @@ class Roles(commands.Cog):
             await user_role.edit(position=bot_role_position-1)
             if color is not None: await user_role.edit(color=color)
 
-            self.roles[str(user.id)] = {
+            roles_data[str(user.id)] = {
                 "role_id": user_role.id,
-                "permion": None
+                "permion": None,
+                "keyword": None
             }
 
             await self.bot.log_print(f"New role {user_role.name} created!")
             await user.add_roles(user_role)
-        elif user.get_role(self.roles[str(user.id)]['role_id']) is not None:
-            await user.add_roles(user.guild.get_role(self.roles[str(user.id)]['role_id']))
+        elif user.get_role(roles_data[str(user.id)]['role_id']) is not None:
+            await user.add_roles(user.guild.get_role(roles_data[str(user.id)]['role_id']))
         else:
-            user_role = user.get_role(self.roles[str(user.id)]['role_id'])
+            user_role = user.get_role(roles_data[str(user.id)]['role_id'])
             if name:
                 await user_role.edit(name=name)
             if color:
                 await user_role.edit(color=color)
 
-        if save: self.save_role_data()
+        if save: save_role_data(roles_data)
 
     # Commands
     @roles_group.command(
@@ -144,6 +143,8 @@ class Roles(commands.Cog):
         ]
     )
     async def change_role_color(self, context: discord.ApplicationContext, color_input: str or None):
+        role_data = load_role_data()
+
         if color_input and color_input.title() in self.COLORS.keys():
             hex_color = int(self.COLORS[color_input.title()], 16)
         elif color_input is None:
@@ -164,4 +165,5 @@ class Roles(commands.Cog):
 
         color_embed.set_thumbnail(url=f"https://via.placeholder.com/50/{formatted_hex}/{formatted_hex}.png")
 
-        await context.response.send_message(embed=color_embed, ephemeral=True, view=self.RoleColorView(self, hex_color, context.author.get_role(self.roles[str(context.author.id)]['role_id']), color_embed))
+        await context.response.send_message(embed=color_embed, ephemeral=True,
+                                            view=self.RoleColorView(self, hex_color, context.author.get_role(role_data[str(context.author.id)]['role_id']), color_embed))

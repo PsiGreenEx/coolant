@@ -9,11 +9,12 @@ import random
 import asyncio
 from datetime import datetime
 # local modules
-from jarvis_processor import JarvisProcessor
+from processors.jarvis import JarvisProcessor
+from processors.permion import PermionProcessor
 
 
 class CoolantBot(commands.Bot, ABC):
-    def __init__(self, jarvis: JarvisProcessor, *args, **options):
+    def __init__(self, jarvis: JarvisProcessor, permion_processor: PermionProcessor, *args, **options):
         super().__init__(*args, **options)
         self.PHRASE_CHANCE = 0.02
         self.REPEATS_NEEDED = 2
@@ -22,6 +23,7 @@ class CoolantBot(commands.Bot, ABC):
         self.repeat_message_count = 0
 
         self.jarvis = jarvis
+        self.permion_processor = permion_processor
 
         with open("data/reactions.json", 'r') as reactions_file:
             reactions_dict = json.loads(reactions_file.read())
@@ -49,8 +51,19 @@ class CoolantBot(commands.Bot, ABC):
 
         author_name = message.author
 
-        # Message Repetition
+        # Permion Activation
+        role_data = load_role_data()
 
+        try:
+            user_role_data: dict or None = role_data[str(message.author.id)]
+        except KeyError:
+            user_role_data = None
+
+        if user_role_data and user_role_data['permion'] and user_role_data['keyword']:
+            if user_role_data['keyword'] in message.content:
+                await self.permion_processor.activate_permion(user_role_data, message)
+
+        # Message Repetition
         if message.content == self.repeat_message and author_name != self.repeat_message_author:
             self.repeat_message_count += 1
         else:
@@ -88,3 +101,13 @@ class CoolantBot(commands.Bot, ABC):
                 await self.log_print(f"Auto reacted to {key} with emoji {self.REACT_DICT[key]}.")
 
         await self.process_commands(message)
+
+
+def load_role_data() -> dict:
+    with open("./store/roles.json", 'r') as f:
+        return json.loads(f.read())
+
+
+def save_role_data(role_data: dict):
+    with open("./store/roles.json", "w") as f:
+        json.dump(role_data, f, ensure_ascii=False, indent=2)

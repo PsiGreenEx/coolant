@@ -1,4 +1,4 @@
-# jarvis_processor.py
+# processors/jarvis.py
 
 import discord
 import random
@@ -43,10 +43,10 @@ class JarvisProcessor:
             "517122589718741022": (3232, 32, 0, 23, 2323)   # 23prez
         }
 
-        with open("data/messages.json", "r") as message_file:
+        with open("./data/messages.json", "r") as message_file:
             self.SCAN_MESSAGES = json.loads(message_file.read())
 
-        with open("store/ball_values.json", "r") as values_file:
+        with open("./store/ball_values.json", "r") as values_file:
             self.ball_values = json.loads(values_file.read())
 
     def update_value(self, user_id: str, value: int):
@@ -94,7 +94,7 @@ class JarvisProcessor:
             if not is_excluded: message = message + self.SCAN_READING[1].format(shown_value)
 
         self.ball_values[user_id].append(message)
-        with open('store/ball_values.json', 'w', encoding='utf-8') as f:
+        with open('../store/ball_values.json', 'w', encoding='utf-8') as f:
             json.dump(self.ball_values, f, ensure_ascii=False, indent=2)
 
     async def jarvis_command(self, message: discord.Message, command: str):
@@ -112,7 +112,6 @@ class JarvisProcessor:
                 else:  # if no one is scanned
                     await asyncio.sleep(2)
                     await message.channel.send("Their balls wack, sir.")
-                    await coolant.log_print(f"{message.author.id} used generic ball scan.")
                     return
 
                 if not any(scan_id in key for key in self.ball_values):  # if there is not a value present
@@ -120,10 +119,9 @@ class JarvisProcessor:
 
                 await asyncio.sleep(2)
                 await message.channel.send(self.ball_values[scan_id][1])
-                await coolant.log_print(f"{message.author.id} scanned {scan_id}'s balls.")
         elif "modsuit" in command:  # modsuit command
             await asyncio.sleep(0.5)
             await message.channel.send("Sir, in 2021.")
         elif "create new vc" in command:  # create new vc
             await asyncio.sleep(0.5)
-            await message.channel.send("The \"create new vc\" channel is ready for you, sir.")
+            await message.channel.send("The <#994003037330866226> channel is ready for you, sir.")

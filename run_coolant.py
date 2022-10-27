@@ -3,7 +3,8 @@ import json
 import discord
 # local modules
 from coolant import CoolantBot
-from jarvis_processor import JarvisProcessor
+from processors.jarvis import JarvisProcessor
+from processors.permion import PermionProcessor
 from cogs.admin import Admin
 from cogs.misc import Miscellaneous
 from cogs.jarvis import Jarvis
@@ -26,8 +27,9 @@ if __name__ == "__main__":
     if DEBUG_MODE: debug_guilds = [bot_data['bot_test_guild_id']]
 
     jarvis = JarvisProcessor()
+    permion_processor = PermionProcessor()
 
-    bot = CoolantBot(jarvis, intents=intents, debug_guilds=debug_guilds, command_prefix=PREFIX)
+    bot = CoolantBot(jarvis, permion_processor, intents=intents, debug_guilds=debug_guilds, command_prefix=PREFIX)
 
     bot.add_cog(Admin(bot))
     bot.add_cog(Miscellaneous(bot))
