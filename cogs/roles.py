@@ -35,7 +35,7 @@ class Roles(commands.Cog):
     async def on_member_joined(self, member: discord.Member):
         await self.update_role(member)
 
-    async def update_role(self, user: discord.Member, name: str or None = None, color: int or None = None, save: bool = True, roles_data: dict or None = None):
+    async def update_role(self, user: discord.Member, name: str = None, color: int = None, save: bool = True, roles_data: dict = None):
         if user.bot:
             return
 
@@ -52,6 +52,8 @@ class Roles(commands.Cog):
             await user_role.edit(position=bot_role_position-1)
             if color is not None: await user_role.edit(color=color)
 
+            user_role_id = user_role.id
+
             roles_data[str(user.id)] = {
                 "role_id": user_role.id,
                 "permion": None,
@@ -60,12 +62,17 @@ class Roles(commands.Cog):
 
             await self.bot.log_print(f"New role {user_role.name} created!")
             await user.add_roles(user_role)
-        elif user.get_role(roles_data[str(user.id)]['role_id']) is not None:
-            await user.add_roles(user.guild.get_role(roles_data[str(user.id)]['role_id']))
         else:
-            user_role = user.get_role(roles_data[str(user.id)]['role_id'])
+            user_role_id: int = roles_data[str(user.id)]['role_id']
+
+        if user.get_role(user_role_id) is None:
+            await user.add_roles(user.guild.get_role(user_role_id))
+        else:
+            user_role = user.get_role(user_role_id)
+
             if name:
                 await user_role.edit(name=name)
+
             if color:
                 await user_role.edit(color=color)
 
