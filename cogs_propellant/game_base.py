@@ -5,6 +5,7 @@ from datetime import date
 import copy
 import random
 from discord.ext import commands
+import logging
 # local modules
 from propellant import PropellantBot, Emojis
 
@@ -12,6 +13,7 @@ from propellant import PropellantBot, Emojis
 class GameBase(commands.Cog):
     def __init__(self, bot_client: PropellantBot):
         self.bot = bot_client
+        self.logger = logging.getLogger('discord')
 
         with open("./data/bot_data.json", "r") as f:
             bot_data = json.loads(f.read())
@@ -322,7 +324,7 @@ class GameBase(commands.Cog):
             label="Accept",
             style=discord.ButtonStyle.green
         )
-        async def accept_callback(self, button: discord.Button, interaction: discord.Interaction):
+        async def accept_callback(self, _button: discord.Button, interaction: discord.Interaction):
             if interaction.user != self.offeree:
                 await interaction.response.send_message(content="This is not your trade to accept.", ephemeral=True)
                 return
@@ -349,7 +351,7 @@ class GameBase(commands.Cog):
             label="Decline",
             style=discord.ButtonStyle.red
         )
-        async def decline_callback(self, button: discord.Button, interaction: discord.Interaction):
+        async def decline_callback(self, _button: discord.Button, interaction: discord.Interaction):
             if not (interaction.user == self.offeree or interaction.user == self.offeror):
                 await interaction.response.send_message(content="This is not your trade to decline.", ephemeral=True)
                 return
@@ -464,7 +466,7 @@ class GameBase(commands.Cog):
             member_game_data['daily']['when_last_claimed'] = date.today().isoformat()
 
             await context.respond(message)
-            await self.bot.log_print(f"{context.author} claimed their dailies.")
+            self.logger.info(f"{context.author} claimed their dailies.")
 
             self.bot.save_data()
         else:
@@ -768,8 +770,6 @@ class GameBase(commands.Cog):
 
         await context.respond(message, embed=trade_embed, view=self.TradeView(self, context.author, user, offer, want, tokenoffer, shinyoffer, tokenwant, shinywant))
 
-    # TODO: Secret secret. I've got a secret.
-
     # Admin Commands
     # Give Item
     @commands.slash_command(
@@ -801,7 +801,7 @@ class GameBase(commands.Cog):
 
         self.add_item_to_inventory(user.id, {"id": item_id, "count": count})
         await context.interaction.response.send_message("Gave item(s).", ephemeral=True)
-        await self.bot.log_print(f"{context.author} gave item {item_id} to {user.id}.")
+        self.logger.info(f"{context.author} gave item {item_id} to {user.id}.")
 
     # Take Item
     @commands.slash_command(
@@ -833,7 +833,7 @@ class GameBase(commands.Cog):
 
         self.remove_item_from_inventory(user.id, item_id, count)
         await context.interaction.response.send_message("Removed item(s).", ephemeral=True)
-        await self.bot.log_print(f"{context.author} took {count} {item_id} from {user.id}.")
+        self.logger.info(f"{context.author} took {count} {item_id} from {user.id}.")
 
     # Money
     @commands.slash_command(

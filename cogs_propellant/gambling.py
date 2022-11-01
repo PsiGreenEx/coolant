@@ -1,4 +1,5 @@
 # gambling.py
+import logging
 import random
 import discord
 import asyncio
@@ -10,6 +11,7 @@ from propellant import PropellantBot, Emojis
 class Gambling(commands.Cog):
     def __init__(self, bot_client: PropellantBot):
         self.bot = bot_client
+        self.logger = logging.getLogger('discord')
 
     # Spin the Slots
     @commands.slash_command(
@@ -72,6 +74,8 @@ class Gambling(commands.Cog):
         if bet > member_game_data["tokens"]:
             await context.interaction.response.send_message(content="Insufficient tokens!", ephemeral=True)
             return
+
+        self.logger.info(f"{context.author} span the slots.")
 
         member_game_data["tokens"] -= bet
         payout = 0

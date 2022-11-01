@@ -7,7 +7,6 @@ import discord
 from discord.ext import commands
 import random
 import asyncio
-from datetime import datetime
 # local modules
 from processors.jarvis import JarvisProcessor
 from processors.permion import PermionProcessor
@@ -31,17 +30,20 @@ class CoolantBot(commands.Bot, ABC):
             self.REACT_DICT = reactions_dict["reactions"]
 
         self.logger = logging.getLogger('discord')
-        self.logger.setLevel(logging.DEBUG)
-        handler = logging.FileHandler(filename='coolant.log', encoding='utf-8', mode='w')
-        handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-        self.logger.addHandler(handler)
+        self.logger.setLevel(logging.INFO)
+        log_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s')
 
-    async def log_print(self, text: str):
-        print('[' + datetime.now().strftime("%x %X") + '] ' + text)
-        self.logger.info(text)
+        file_handler = logging.FileHandler(filename='coolant.log', encoding='utf-8', mode='a')
+        file_handler.setFormatter(log_formatter)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(log_formatter)
+
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(console_handler)
 
     async def on_ready(self):
-        await self.log_print(f'{self.user} has connected to Discord!')
+        self.logger.info(f'{self.user} has connected to Discord!')
 
     async def on_message(self, message: discord.Message):
         message_content: str = message.content.lower()
@@ -91,14 +93,14 @@ class CoolantBot(commands.Bot, ABC):
             for key in self.PHRASE_DICT:
                 if key in message.content.lower():
                     await message.reply(self.PHRASE_DICT[key])
-                    await self.log_print(f"Auto replied to {key} with {self.PHRASE_DICT[key]}")
+                    self.logger.info(f"Auto replied to {key} with {self.PHRASE_DICT[key]}")
                     break
 
         # Reactions
         for key in self.REACT_DICT:
             if key in message.content.lower():
                 await message.add_reaction(self.get_emoji(self.REACT_DICT[key]))
-                await self.log_print(f"Auto reacted to {key} with emoji {self.REACT_DICT[key]}.")
+                self.logger.info(f"Auto reacted to {key} with emoji {self.REACT_DICT[key]}.")
 
         await self.process_commands(message)
 

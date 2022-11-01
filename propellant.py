@@ -19,10 +19,17 @@ class PropellantBot(commands.Bot, ABC):
         super().__init__(*args, **options)
 
         self.logger = logging.getLogger('discord')
-        self.logger.setLevel(logging.DEBUG)
-        handler = logging.FileHandler(filename='propellant.log', encoding='utf-8', mode='w')
-        handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-        self.logger.addHandler(handler)
+        self.logger.setLevel(logging.INFO)
+        log_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s')
+
+        file_handler = logging.FileHandler(filename='coolant.log', encoding='utf-8', mode='a')
+        file_handler.setFormatter(log_formatter)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(log_formatter)
+
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(console_handler)
 
         # Game Information (such as item data)
         with open("./data/game_info.json", "r") as f:
@@ -33,10 +40,6 @@ class PropellantBot(commands.Bot, ABC):
         # Game Data (such as players' inventories)
         with open("./store/game_data.json", "r") as f:
             self.game_data_dict: dict = json.loads(f.read())
-
-    async def log_print(self, text: str):
-        print('[' + datetime.now().strftime("%x %X") + '] ' + text)
-        self.logger.info(text)
 
     def save_data(self):
         with open('./store/game_data.json', 'w', encoding='utf-8') as f:
@@ -50,4 +53,4 @@ class PropellantBot(commands.Bot, ABC):
         return self.game_data_dict['users'][str(user_id)]
 
     async def on_ready(self):
-        await self.log_print(f'{self.user} has connected to Discord!')
+        self.logger.info(f'{self.user} has connected to Discord!')

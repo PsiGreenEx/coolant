@@ -1,4 +1,5 @@
 # misc.py
+import logging
 
 import discord
 import random
@@ -13,6 +14,7 @@ class Miscellaneous(commands.Cog):
         self.bot = bot_client
         self.auto_change_status.start()
         self.dud_messages = [0]
+        self.logger = logging.getLogger('discord')
 
         with open("./data/bot_data.json", "r") as f:
             bot_data = json.loads(f.read())
@@ -43,7 +45,7 @@ class Miscellaneous(commands.Cog):
     @tasks.loop(hours=6)
     async def auto_change_status(self):
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(self.status_movies)))
-        await self.bot.log_print("Automatically changed status.")
+        self.logger.info("Automatically changed status.")
 
     @auto_change_status.before_loop
     async def before_status_loop(self):
@@ -118,7 +120,7 @@ class Miscellaneous(commands.Cog):
         title2 = None
         new_title = ""
 
-        await self.bot.log_print(f"{str(context.author)} used fuse.")
+        self.logger.info(f"{str(context.author)} used fuse.")
 
         # Pull users names
         if use_nickname:

@@ -1,47 +1,49 @@
 # processors/jarvis.py
+import logging
 
 import discord
 import random
 import asyncio
 import json
 # local modules
-import coolant
 
 
 class JarvisProcessor:
+    VALUE_CATEGORY = {
+        "SUPERWACK": 0,
+        "WACK": 1,
+        "ZERO": 2,
+        "SILLY": 3,
+        "SUPERSILLY": 4
+    }
+
+    INFLATION_CHANCE = 0.001
+    INFLATION_MULTIPLIER = 15
+    SILLY_INCREASE_MARGIN = 10
+    SILLY_DAMPENER = 0.5
+    SILLY_MULTIPLIER = 2.0
+
+    SCAN_READING = (" `{}%` wack.", " `{}%` silly.")
+
+    VALUE_EXCLUSION = (
+        "868744451244302346",
+        "594323388705538069",
+        "155149108183695360",
+        "159985870458322944",
+        "783772765962240022",
+        "534589798267224065",
+        "235088799074484224",
+        "856326057400598590"
+    )
+
+    SPECIAL_VALUES = {
+        "624738893543243786": (-3939, -39, 0, 39, 3939),  # smoothie
+        "402026123086528518": (777, 77, 0, 77, 777),  # neo
+        "517122589718741022": (3232, 32, 0, 23, 2323)   # 23prez
+    }
+
     def __init__(self):
-        self.VALUE_CATEGORY = {
-            "SUPERWACK": 0,
-            "WACK": 1,
-            "ZERO": 2,
-            "SILLY": 3,
-            "SUPERSILLY": 4
-        }
-
-        self.INFLATION_CHANCE = 0.001
-        self.INFLATION_MULTIPLIER = 15
-        self.SILLY_INCREASE_MARGIN = 10
-        self.SILLY_DAMPENER = 0.5
-        self.SILLY_MULTIPLIER = 2.0
-
-        self.SCAN_READING = (" `{}%` wack.", " `{}%` silly.")
-
-        self.VALUE_EXCLUSION = (
-            "868744451244302346",
-            "594323388705538069",
-            "155149108183695360",
-            "159985870458322944",
-            "783772765962240022",
-            "534589798267224065",
-            "235088799074484224",
-            "856326057400598590"
-        )
-
-        self.SPECIAL_VALUES = {
-            "624738893543243786": (-3939, -39, 0, 39, 3939),  # smoothie
-            "402026123086528518": (777, 77, 0, 77, 777),  # neo
-            "517122589718741022": (3232, 32, 0, 23, 2323)   # 23prez
-        }
+        self.logger = logging.getLogger('discord')
 
         with open("./data/messages.json", "r") as message_file:
             self.SCAN_MESSAGES = json.loads(message_file.read())
@@ -100,6 +102,7 @@ class JarvisProcessor:
     async def jarvis_command(self, message: discord.Message, command: str):
         # ball scanning
         if "balls" in command and "scan" in command:
+            self.logger.info(f"{message.author} used ball scan.")
             await asyncio.sleep(0.5)
             await message.channel.send("Yes sir, commencing ball scan...")
             async with message.channel.typing():
@@ -120,8 +123,10 @@ class JarvisProcessor:
                 await asyncio.sleep(2)
                 await message.channel.send(self.ball_values[scan_id][1])
         elif "modsuit" in command:  # modsuit command
+            self.logger.info(f"{message.author} used modsuit.")
             await asyncio.sleep(0.5)
             await message.channel.send("Sir, in 2021.")
         elif "create new vc" in command:  # create new vc
+            self.logger.info(f"{message.author} used \"create new vc\" jarvis command.")
             await asyncio.sleep(0.5)
             await message.channel.send("The <#994003037330866226> channel is ready for you, sir.")

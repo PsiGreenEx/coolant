@@ -1,5 +1,6 @@
 # roles.py
 import json
+import logging
 import random
 
 from discord.ext import commands
@@ -11,6 +12,7 @@ from coolant import CoolantBot, load_role_data, save_role_data
 class Roles(commands.Cog):
     def __init__(self, bot_client: CoolantBot):
         self.bot = bot_client
+        self.logger = logging.getLogger('discord')
 
         with open("./data/bot_data.json", "r") as f:
             self.BOT_ROLE_ID: int = json.loads(f.read())['bot_role_id']
@@ -60,23 +62,22 @@ class Roles(commands.Cog):
                 "keyword": None
             }
 
-            await self.bot.log_print(f"New role {user_role.name} created!")
+            self.logger.info(f"New role \"{user_role.name}\" created for {user}!")
             await user.add_roles(user_role)
         else:
             user_role_id: int = roles_data[str(user.id)]['role_id']
 
         if user.get_role(user_role_id) is None:
             await user.add_roles(user.guild.get_role(user_role_id))
-        else:
-            user_role = user.get_role(user_role_id)
 
-            if name:
-                await user_role.edit(name=name)
+        user_role = user.get_role(user_role_id)
 
-            if color:
-                await user_role.edit(color=color)
+        if name: await user_role.edit(name=name)
+
+        if color: await user_role.edit(color=color)
 
         if save: save_role_data(roles_data)
+        self.logger.info(f"Updated {user}'s role \"{user_role.name}\".")
 
     # Commands
     @roles_group.command(

@@ -1,6 +1,7 @@
 # voice_channels.py
 import copy
 import json
+import logging
 import discord
 from discord.ext import commands
 # local modules
@@ -11,6 +12,7 @@ class VoiceChannels(commands.Cog):
     def __init__(self, bot_client: coolant.CoolantBot):
         self.bot = bot_client
         self.channel_list: list[discord.abc.GuildChannel] = []
+        self.logger = logging.getLogger('discord')
 
         with open("./data/bot_data.json", 'r') as f:
             bot_data = json.loads(f.read())
@@ -34,7 +36,7 @@ class VoiceChannels(commands.Cog):
             self.channel_list.append(voice_channel)
             self.leftover_vcs.remove(vc_id)
             if len(voice_channel.members) == 0:
-                await self.bot.log_print(f"Deleted leftover voice channel \"{voice_channel.name}\".")
+                self.logger.info(f"Deleted leftover voice channel \"{voice_channel.name}\".")
                 await voice_channel.delete()
 
         with open("./store/leftover_vcs.json", "w") as f:
@@ -80,6 +82,7 @@ class VoiceChannels(commands.Cog):
             discord.EmbedField("Channel Name", self.vc_preferences[author_id][1].format(context.author.name), True)
         ])
 
+        self.logger.info(f"{context.author} updated their VC Prefs.")
         await context.interaction.response.send_message(embed=embed, ephemeral=True)
 
     # Creates temporary voice channel on join of "creation channel"
@@ -112,12 +115,12 @@ class VoiceChannels(commands.Cog):
                 with open("./store/leftover_vcs.json", "w") as f:
                     json.dump(list(map(lambda x: x.id, self.channel_list)), f, ensure_ascii=False, indent=2)
 
-                await self.bot.log_print(f"Created voice channel \"{channel_name}\".")
+                self.logger.info(f"Created voice channel \"{channel_name}\".")
                 await member.move_to(new_channel)
 
         if before.channel in self.channel_list:
             if len(before.channel.members) == 0:
-                await self.bot.log_print(f"Deleted voice channel \"{before.channel.name}\".")
+                self.logger.info(f"Deleted voice channel \"{before.channel.name}\".")
 
                 self.channel_list.remove(before.channel)
 

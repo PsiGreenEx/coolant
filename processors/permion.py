@@ -1,9 +1,11 @@
 # processors/permion.py
+import logging
 import discord
 
 
 class PermionProcessor:
     def __init__(self):
+        self.logger = logging.getLogger('discord')
         self.PERMION_DICT: dict = {  # dictionary contains references to a function to call upon activation.
             # keyword activated
             "active": {},

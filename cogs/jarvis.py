@@ -1,6 +1,7 @@
 # jarvis.py
 
 import json
+import logging
 import random
 import asyncio
 import discord
@@ -15,6 +16,7 @@ class Jarvis(commands.Cog):
         self.bot = bot_client
         self.offset_values.start()
         self.jarvis = jarvis
+        self.logger = logging.getLogger('discord')
 
         with open("./data/bot_data.json", "r") as f:
             bot_data = json.loads(f.read())
@@ -66,7 +68,7 @@ class Jarvis(commands.Cog):
 
         self.jarvis.update_value(str(user.id), int(value))
         response = await context.respond("Value updated.")
-        await self.bot.log_print(f"Manually updated {user}'s balls to value {value}.")
+        self.logger.info(f"Manually updated {user}'s balls to value {value}.")
 
         await response.delete_original_response(delay=3)
 
